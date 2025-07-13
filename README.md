@@ -1,1 +1,1 @@
-# Afristocks Project
+# AfriStocks Platform
