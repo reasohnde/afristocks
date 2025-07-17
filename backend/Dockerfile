@@ -1,12 +1,16 @@
-FROM python:3.10-slim
+FROM node:20-alpine AS development
 
 WORKDIR /app
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY package*.json ./
+COPY prisma ./prisma/
 
-COPY app ./app
+RUN npm ci
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
+COPY . .
 
+RUN npx prisma generate
 
+EXPOSE 3000
+
+CMD ["npm", "run", "dev"]

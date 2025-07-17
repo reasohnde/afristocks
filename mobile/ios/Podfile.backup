@@ -1,0 +1,44 @@
+# React Native 0.80+ – Podfile officiel et compatible
+
+# Résout le script react_native_pods.rb, requis pour Yarn PnP/hoisting
+require Pod::Executable.execute_command('node', ['-p',
+  'require.resolve(
+    "react-native/scripts/react_native_pods.rb",
+    {paths: [process.argv[1]]},
+  )', __dir__]).strip
+
+platform :ios, '15.1'
+
+prepare_react_native_project!
+
+target 'AfriStocksMobile' do
+  config = use_native_modules!
+
+  use_react_native!(
+    :path => config[:reactNativePath],
+    :hermes_enabled => false,   # Mets false si tu n'utilises pas Hermes
+    :fabric_enabled => false,
+    :app_path => "#{Pod::Config.instance.installation_root}/.."
+  )
+
+  # ----
+  # Ajoute ici d'autres pods spécifiques à ton projet, si nécessaire
+  # ----
+
+  post_install do |installer|
+    react_native_post_install(
+      installer,
+      config[:reactNativePath],
+      :mac_catalyst_enabled => false
+    ) if defined?(react_native_post_install)
+
+    # Correctifs courants pour Xcode
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+        config.build_settings['ENABLE_BITCODE'] = 'NO'
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.1'
+      end
+    end
+  end
+end
