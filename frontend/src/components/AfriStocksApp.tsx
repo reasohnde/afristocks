@@ -1,19 +1,50 @@
 import React, { useState, useEffect } from 'react';
-import { Search, TrendingUp, Shield, Globe, Users, BarChart3, Menu, X, ChevronRight, Star, Play, FileText, ArrowUpRight, ArrowDownRight, Bell, Briefcase, LineChart, CheckCircle, AlertCircle, Sparkles, Zap, Activity, DollarSign, Wallet } from 'lucide-react';
+import { Search, TrendingUp, Shield, Globe, Users, BarChart3, Menu, X, ChevronRight, Star, Play, FileText, ArrowUpRight, ArrowDownRight, Bell, Briefcase, LineChart, CheckCircle, AlertCircle, Sparkles, Activity, DollarSign, Wallet } from 'lucide-react';
+import { Building2, UserCircle, Heart, Zap, ShoppingCart, GraduationCap, Truck, Leaf, Cpu, Edit3, Camera, FileCheck, Globe as GlobeIcon, Eye, Plus, Upload, Download } from 'lucide-react';
+import { FundProvider } from '../contexts/FundContext';
+import { User, Startup } from '../types';
+
+// Import from learn folder
+import {
+  LearnTradingView,
+  FormationsView,
+  FormationDetailView,
+  FAQView,
+  InvestmentGuideView
+} from '../app/views/learn';
+
+// Import other views
+import InvestmentFundView from '../app/views/InvestmentFundView';
+import InvestmentCheckoutView from '../app/views/InvestmentCheckoutView';
+import NewsView from '../app/views/NewsView';
+import TradingView from '../app/views/TradingView';
+import PortfolioView from '../app/views/PortfolioView';
+import StartupDetailView from '../app/views/StartupDetailView';
+import StartupDashboardView from '../app/views/StartupDashboardView';
+
+// Type definitions - using imported types from ../types
 
 const API_URL = 'http://localhost:8000';
 
 const AfriStocksApp = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeView, setActiveView] = useState('home');
-  const [selectedStartup, setSelectedStartup] = useState(null);
+  const [selectedStartup, setSelectedStartup] = useState<Startup | null>(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [mounted, setMounted] = useState(false);
 
+  const [showAccountTypeSelection, setShowAccountTypeSelection] = useState(false);
+  const [selectedAccountType, setSelectedAccountType] = useState<'investor' | 'startup' | null>(null);
+
+  // États nécessaires (déclarés une seule fois)
+  const [selectedFormation, setSelectedFormation] = useState<any>(null);
+  const [selectedNews, setSelectedNews] = useState<any>(null);
+  const [checkoutData, setCheckoutData] = useState<any>(null);
+
   // Gestion de l'authentification
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authMode, setAuthMode] = useState('login');
 
@@ -50,7 +81,7 @@ const AfriStocksApp = () => {
       const data = await response.json();
 
       if (response.ok) {
-        const userData = {
+        const userData: User = {
           ...data.user,
           balance: data.user.balance || 125000,
           portfolio: data.user.portfolio || 85000,
@@ -63,6 +94,9 @@ const AfriStocksApp = () => {
         setUser(userData);
         setIsAuthenticated(true);
         setShowAuthModal(false);
+        if (userData.role === 'STARTUP') {
+          setActiveView('startup-dashboard');
+        }
       } else {
         alert(data.message || 'Erreur de connexion');
       }
@@ -72,23 +106,35 @@ const AfriStocksApp = () => {
   };
 
   // Fonction d'inscription
-  const handleRegister = async (name: string, email: string, password: string) => {
+  const handleRegister = async (name: string, email: string, password: string, phoneNumber?: string, accountType?: string, sector?: string, country?: string, city?: string) => {
     try {
+      const payload = {
+        name,
+        email,
+        password,
+        phoneNumber,
+        role: accountType === 'startup' ? 'STARTUP' : 'USER',
+        sector,
+        country,
+        city
+      };
+
       const response = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
+        body: JSON.stringify(payload)
       });
 
       const data = await response.json();
 
       if (response.ok && data.success) {
-        const userData = {
+        const userData: User = {
           ...data.data.user,
           balance: data.data.user.balance || 125000,
           portfolio: data.data.user.portfolio || 85000,
           returns: data.data.user.returns || 12.5,
-          verified: data.data.user.verified || false
+          verified: data.data.user.verified || false,
+          role: data.data.user.role
         };
 
         localStorage.setItem('token', data.data.token);
@@ -96,6 +142,10 @@ const AfriStocksApp = () => {
         setUser(userData);
         setIsAuthenticated(true);
         setShowAuthModal(false);
+
+        if (userData.role === 'STARTUP') {
+          setActiveView('startup-dashboard');
+        }
       } else {
         alert(data.message || 'Erreur d\'inscription');
       }
@@ -119,9 +169,9 @@ const AfriStocksApp = () => {
   const userReturns = user?.returns || 0;
 
   // Données simulées pour les startups
-  const startups = [
+  const startups: Startup[] = [
     {
-      id: 1,
+      id: '1',
       name: 'AgroTech Solutions',
       sector: 'Agriculture',
       country: 'Côte d\'Ivoire',
@@ -141,7 +191,7 @@ const AfriStocksApp = () => {
       team: 12
     },
     {
-      id: 2,
+      id: '2',
       name: 'MediConnect Africa',
       sector: 'Santé',
       country: 'Kenya',
@@ -161,7 +211,7 @@ const AfriStocksApp = () => {
       team: 24
     },
     {
-      id: 3,
+      id: '3',
       name: 'EduSmart',
       sector: 'Education',
       country: 'Nigeria',
@@ -181,7 +231,7 @@ const AfriStocksApp = () => {
       team: 18
     },
     {
-      id: 4,
+      id: '4',
       name: 'SolarPower SA',
       sector: 'Energie',
       country: 'Afrique du Sud',
@@ -216,10 +266,10 @@ const AfriStocksApp = () => {
   ];
 
   // Glass Card Component
-  const GlassCard = ({ children, className = '', glowColor = 'blue', hoverable = true, onClick = null }) => {
+  const GlassCard = ({ children, className = '', glowColor = 'blue', hoverable = true, onClick = null }: any) => {
     const [isHovered, setIsHovered] = useState(false);
-    
-    const glowColors = {
+
+    const glowColors: any = {
       blue: 'rgba(74, 144, 226, 0.6)',
       emerald: 'rgba(0, 217, 163, 0.6)',
       sunset: 'rgba(255, 107, 53, 0.6)',
@@ -243,47 +293,73 @@ const AfriStocksApp = () => {
             }}
           />
         )}
-        
+
         {/* Glass Card */}
         <div
-          className={`relative h-full bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-2xl rounded-2xl border border-white/10 p-6 ${
-            hoverable ? 'cursor-pointer transition-all duration-300 hover:translate-y-[-4px] hover:border-white/20' : ''
-          }`}
+          className={`relative h-full bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-2xl rounded-2xl border border-white/10 p-6 ${hoverable ? 'cursor-pointer transition-all duration-300 hover:translate-y-[-4px] hover:border-white/20' : ''
+            }`}
         >
           {/* Glass Reflection */}
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/[0.05] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
-          
           {children}
         </div>
       </div>
     );
   };
 
-  // Composant Modal d'authentification avec nouveau design
+  // Composant Modal d'authentification
   const AuthModal = () => {
     const [formData, setFormData] = useState({
       name: '',
       email: '',
-      password: ''
+      password: '',
+      phoneNumber: '',
+      sector: '',
+      country: 'Côte d\'Ivoire',
+      city: ''
     });
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = (e) => {
+    const sectors = [
+      { id: 'fintech', name: 'FinTech', icon: Building2 },
+      { id: 'healthtech', name: 'HealthTech', icon: Heart },
+      { id: 'energy', name: 'Énergie', icon: Zap },
+      { id: 'ecommerce', name: 'E-commerce', icon: ShoppingCart },
+      { id: 'edtech', name: 'EdTech', icon: GraduationCap },
+      { id: 'logistics', name: 'Logistique', icon: Truck },
+      { id: 'agritech', name: 'AgriTech', icon: Leaf },
+      { id: 'tech', name: 'Tech', icon: Cpu }
+    ];
+
+    const handleSubmit = async (e: React.FormEvent) => {
       e.preventDefault();
+      setIsLoading(true);
+
       if (authMode === 'login') {
-        handleLogin(formData.email, formData.password);
+        await handleLogin(formData.email, formData.password);
       } else {
-        handleRegister(formData.name, formData.email, formData.password);
+        await handleRegister(
+          formData.name,
+          formData.email,
+          formData.password,
+          formData.phoneNumber,
+          selectedAccountType === 'startup' ? 'startup' : 'investor',
+          formData.sector,
+          formData.country,
+          formData.city
+        );
       }
+      setIsLoading(false);
     };
 
     if (!showAuthModal) return null;
 
     return (
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
-        <div className="bg-gradient-to-br from-white/[0.12] to-white/[0.08] backdrop-blur-2xl rounded-2xl p-8 max-w-md w-full border border-white/20 shadow-2xl">
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-gradient-to-br from-white/[0.12] to-white/[0.08] backdrop-blur-2xl rounded-2xl p-8 max-w-md w-full border border-white/20 shadow-2xl max-h-[90vh] overflow-y-auto">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold text-white">
-              {authMode === 'login' ? 'Se connecter' : 'S\'inscrire'}
+              {authMode === 'login' ? 'Se connecter' : 'Créer votre compte'}
             </h2>
             <button
               onClick={() => setShowAuthModal(false)}
@@ -293,21 +369,92 @@ const AfriStocksApp = () => {
             </button>
           </div>
 
-          <div className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {authMode === 'register' && (
-              <div>
-                <label className="block text-sm font-medium text-white/80 mb-1">
-                  Nom complet
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/40 backdrop-blur"
-                  placeholder="John Doe"
-                />
-              </div>
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-white/80 mb-1">
+                    Nom complet
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/40 backdrop-blur"
+                    placeholder="John Doe"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-white/80 mb-1">
+                    Numéro de téléphone
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.phoneNumber}
+                    onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-white/40 backdrop-blur"
+                    placeholder="+225 0123456789"
+                  />
+                </div>
+
+                {selectedAccountType === 'startup' && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-white/80 mb-2">
+                        Secteur d'activité
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {sectors.map(sector => (
+                          <button
+                            key={sector.id}
+                            type="button"
+                            onClick={() => setFormData({ ...formData, sector: sector.id })}
+                            className={`p-3 rounded-lg border transition-all duration-300 flex flex-col items-center ${formData.sector === sector.id
+                              ? 'bg-white/20 border-white/40 text-white'
+                              : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'
+                              }`}
+                          >
+                            <sector.icon className="w-5 h-5 mb-1" />
+                            <span className="text-xs">{sector.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-white/80 mb-1">
+                        Pays
+                      </label>
+                      <select
+                        value={formData.country}
+                        onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white backdrop-blur"
+                      >
+                        <option value="Côte d'Ivoire">Côte d'Ivoire</option>
+                        <option value="Sénégal">Sénégal</option>
+                        <option value="Ghana">Ghana</option>
+                        <option value="Nigeria">Nigeria</option>
+                        <option value="Kenya">Kenya</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-white/80 mb-1">
+                        Ville
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.city}
+                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 backdrop-blur"
+                        placeholder="Abidjan"
+                      />
+                    </div>
+                  </>
+                )}
+              </>
             )}
 
             <div>
@@ -340,12 +487,12 @@ const AfriStocksApp = () => {
 
             <button
               type="submit"
-              onClick={handleSubmit}
-              className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-3 rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-300 font-semibold transform hover:scale-[1.02] active:scale-[0.98]"
+              disabled={isLoading}
+              className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white py-3 rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-300 font-semibold transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
             >
-              {authMode === 'login' ? 'Se connecter' : 'S\'inscrire'}
+              {isLoading ? 'Chargement...' : (authMode === 'login' ? 'Se connecter' : 'S\'inscrire')}
             </button>
-          </div>
+          </form>
 
           <p className="mt-6 text-center text-sm text-white/60">
             {authMode === 'login' ? (
@@ -375,7 +522,74 @@ const AfriStocksApp = () => {
     );
   };
 
-  // Header avec nouveau design
+  // Composant AccountTypeSelection
+  const AccountTypeSelection = ({ onSelectType }: { onSelectType: (type: 'investor' | 'startup') => void }) => {
+    const [isVisible, setIsVisible] = useState(false);
+
+    useEffect(() => {
+      setIsVisible(true);
+    }, []);
+
+    return (
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className={`max-w-4xl w-full transition-all duration-700 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
+          }`}>
+          <div className="bg-white/10 backdrop-blur-2xl rounded-3xl p-8 md:p-12 border border-white/20 shadow-2xl">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">
+                Comment souhaitez-vous utiliser AfriStocks ?
+              </h2>
+              <p className="text-lg text-white/60">
+                Sélectionnez le type de compte qui correspond à vos besoins
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              <div
+                onClick={() => onSelectType('investor')}
+                className="group relative cursor-pointer"
+              >
+                <div className="relative h-full bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-8 transition-all duration-300 hover:border-white/30 hover:bg-white/15">
+                  <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 flex items-center justify-center mb-6">
+                    <UserCircle className="w-8 h-8 text-emerald-400" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-3">Investisseur</h3>
+                  <p className="text-white/70 mb-6">
+                    Investissez dans des startups africaines prometteuses
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-white/40">Pour investir</span>
+                    <ChevronRight className="w-5 h-5 text-white/40 group-hover:text-white/60 transition-colors" />
+                  </div>
+                </div>
+              </div>
+
+              <div
+                onClick={() => onSelectType('startup')}
+                className="group relative cursor-pointer"
+              >
+                <div className="relative h-full bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-8 transition-all duration-300 hover:border-white/30 hover:bg-white/15">
+                  <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center mb-6">
+                    <Building2 className="w-8 h-8 text-orange-400" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-3">Startup / PME</h3>
+                  <p className="text-white/70 mb-6">
+                    Levez des fonds pour développer votre entreprise
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-white/40">Pour lever des fonds</span>
+                    <ChevronRight className="w-5 h-5 text-white/40 group-hover:text-white/60 transition-colors" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Header Component
   const Header = () => (
     <header className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-slate-950/95 to-slate-950/80 backdrop-blur-xl border-b border-white/10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -400,20 +614,22 @@ const AfriStocksApp = () => {
 
           <div className="hidden lg:flex items-center space-x-8">
             <nav className="flex space-x-6">
-              {['home', 'startups', 'portfolio', 'trading'].map((view) => (
+              {['home', 'startups', 'portfolio', 'trading', 'investment-fund', 'formations', 'news'].map((view) => (
                 <button
                   key={view}
                   onClick={() => setActiveView(view)}
-                  className={`relative text-sm font-medium transition-all duration-300 ${
-                    activeView === view 
-                      ? 'text-orange-400' 
-                      : 'text-white/70 hover:text-white'
-                  }`}
+                  className={`relative text-sm font-medium transition-all duration-300 ${activeView === view
+                    ? 'text-orange-400'
+                    : 'text-white/70 hover:text-white'
+                    }`}
                 >
                   {view === 'home' && 'Accueil'}
                   {view === 'startups' && 'Startups'}
                   {view === 'portfolio' && 'Portfolio'}
                   {view === 'trading' && 'Trading'}
+                  {view === 'investment-fund' && 'Fonds'}
+                  {view === 'formations' && 'Formations'}
+                  {view === 'news' && 'Actualités'}
                   {activeView === view && (
                     <div className="absolute -bottom-0.5 left-0 right-0 h-0.5 bg-gradient-to-r from-orange-400 to-amber-400 rounded-full" />
                   )}
@@ -443,10 +659,9 @@ const AfriStocksApp = () => {
                     {notifications.map(notif => (
                       <div key={notif.id} className="p-4 border-b border-white/5 hover:bg-white/5 transition-colors">
                         <div className="flex items-start">
-                          <div className={`w-2 h-2 rounded-full mt-2 mr-3 ${
-                            notif.type === 'success' ? 'bg-emerald-400' :
+                          <div className={`w-2 h-2 rounded-full mt-2 mr-3 ${notif.type === 'success' ? 'bg-emerald-400' :
                             notif.type === 'warning' ? 'bg-amber-400' : 'bg-blue-400'
-                          }`}></div>
+                            }`}></div>
                           <div className="flex-1">
                             <p className="text-sm text-white/90">{notif.message}</p>
                             <p className="text-xs text-white/50 mt-1">{notif.time}</p>
@@ -458,6 +673,18 @@ const AfriStocksApp = () => {
                 </div>
               )}
             </div>
+
+            {isAuthenticated && user?.role === 'STARTUP' && (
+              <button
+                onClick={() => setActiveView('startup-dashboard')}
+                className={`px-4 py-2 rounded-lg font-medium transition-all ${activeView === 'startup-dashboard'
+                  ? 'bg-emerald-500 text-white'
+                  : 'bg-white/10 text-white/80 hover:bg-white/20'
+                  }`}
+              >
+                Mon Dashboard
+              </button>
+            )}
 
             {isAuthenticated ? (
               <div className="flex items-center space-x-3 border-l border-white/20 pl-4">
@@ -479,7 +706,7 @@ const AfriStocksApp = () => {
                   Déconnexion
                 </button>
                 <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-amber-500 rounded-full flex items-center justify-center text-white font-semibold shadow-lg">
-                  {user?.name ? user.name.split(' ').map(n => n[0]).join('') : 'U'}
+                  {user?.name ? user.name.split(' ').map((n: string) => n[0]).join('') : 'U'}
                 </div>
               </div>
             ) : (
@@ -495,8 +722,7 @@ const AfriStocksApp = () => {
                 </button>
                 <button
                   onClick={() => {
-                    setAuthMode('register');
-                    setShowAuthModal(true);
+                    setShowAccountTypeSelection(true);
                   }}
                   className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-500 text-white rounded-lg hover:from-orange-600 hover:to-amber-600 transition-all duration-300 font-medium transform hover:scale-[1.02] active:scale-[0.98]"
                 >
@@ -530,21 +756,19 @@ const AfriStocksApp = () => {
     </header>
   );
 
-  // Vue Accueil avec nouveau design
+  // HomeView Component
   const HomeView = () => (
     <div className="space-y-8">
       {/* Section Hero */}
       <div className={`relative rounded-3xl overflow-hidden transition-all duration-700 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-        {/* Background avec gradient animé */}
         <div className="absolute inset-0 bg-gradient-to-br from-orange-600/20 via-amber-600/10 to-emerald-600/20 animate-gradient"></div>
-        
-        {/* Content */}
+
         <div className="relative glass-heavy p-8 md:p-12">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-orange-500/10 to-amber-500/10 border border-orange-500/20 backdrop-blur-xl mb-6">
             <Sparkles className="w-4 h-4 text-orange-400" />
             <span className="text-sm font-medium text-orange-300">Plateforme d'investissement #1 en Afrique</span>
           </div>
-          
+
           <h1 className="text-4xl md:text-5xl font-bold mb-4">
             <span className="bg-gradient-to-r from-white via-white to-white/80 bg-clip-text text-transparent">
               Bienvenue sur{' '}
@@ -556,7 +780,7 @@ const AfriStocksApp = () => {
           <p className="text-xl text-white/70 mb-8 max-w-2xl">
             Investissez dans l'avenir de l'Afrique en soutenant des startups innovantes
           </p>
-          
+
           {isAuthenticated ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <GlassCard className="group" hoverable={false}>
@@ -570,7 +794,7 @@ const AfriStocksApp = () => {
                   <span>+2.5% ce mois</span>
                 </div>
               </GlassCard>
-              
+
               <GlassCard className="group" hoverable={false}>
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm text-white/60">Valeur du portfolio</p>
@@ -582,7 +806,7 @@ const AfriStocksApp = () => {
                   <span>+{userReturns}% total</span>
                 </div>
               </GlassCard>
-              
+
               <GlassCard className="group" hoverable={false}>
                 <div className="flex items-center justify-between mb-2">
                   <p className="text-sm text-white/60">Rendement annuel</p>
@@ -614,7 +838,7 @@ const AfriStocksApp = () => {
       <div className={`transition-all duration-700 delay-200 ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-white">Startups en vedette</h2>
-          <button 
+          <button
             onClick={() => setActiveView('startups')}
             className="text-orange-400 hover:text-orange-300 text-sm font-medium flex items-center transition-colors"
           >
@@ -622,11 +846,11 @@ const AfriStocksApp = () => {
             <ChevronRight className="w-4 h-4 ml-1" />
           </button>
         </div>
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {startups.slice(0, 2).map((startup, index) => (
-            <GlassCard 
-              key={startup.id} 
+            <GlassCard
+              key={startup.id}
               glowColor={index === 0 ? 'emerald' : 'blue'}
               onClick={() => { setSelectedStartup(startup); setActiveView('startup-detail'); }}
             >
@@ -690,7 +914,7 @@ const AfriStocksApp = () => {
             </div>
           </div>
         </GlassCard>
-        
+
         <GlassCard hoverable={false} className="group">
           <div className="flex items-center justify-between">
             <div>
@@ -702,7 +926,7 @@ const AfriStocksApp = () => {
             </div>
           </div>
         </GlassCard>
-        
+
         <GlassCard hoverable={false} className="group">
           <div className="flex items-center justify-between">
             <div>
@@ -714,7 +938,7 @@ const AfriStocksApp = () => {
             </div>
           </div>
         </GlassCard>
-        
+
         <GlassCard hoverable={false} className="group">
           <div className="flex items-center justify-between">
             <div>
@@ -730,7 +954,7 @@ const AfriStocksApp = () => {
     </div>
   );
 
-  // Vue Liste des Startups avec nouveau design
+  // StartupsView Component
   const StartupsView = () => (
     <div>
       <div className="mb-8">
@@ -738,7 +962,6 @@ const AfriStocksApp = () => {
         <p className="text-white/60">Découvrez les entreprises innovantes qui façonnent l'avenir de l'Afrique</p>
       </div>
 
-      {/* Filtres avec glass effect */}
       <div className="flex flex-wrap gap-4 mb-8">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/40 w-5 h-5" />
@@ -765,10 +988,9 @@ const AfriStocksApp = () => {
         </select>
       </div>
 
-      {/* Liste des startups */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {startups.map((startup, index) => (
-          <GlassCard 
+          <GlassCard
             key={startup.id}
             glowColor={['emerald', 'blue', 'sunset', 'purple'][index % 4]}
             onClick={() => { setSelectedStartup(startup); setActiveView('startup-detail'); }}
@@ -790,7 +1012,7 @@ const AfriStocksApp = () => {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-white/50">Valorisation</span>
                 <span className="text-sm font-semibold text-white">
-                  {(startup.valuation / 1000000).toFixed(1)}M XOF
+                  {((startup.valuation || 0) / 1000000).toFixed(1)}M XOF
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -800,7 +1022,7 @@ const AfriStocksApp = () => {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-white/50">Disponible</span>
                 <span className="text-sm font-semibold text-white">
-                  {startup.availableShares.toLocaleString()} actions
+                  {(startup.availableShares || 0).toLocaleString()} actions
                 </span>
               </div>
             </div>
@@ -841,87 +1063,157 @@ const AfriStocksApp = () => {
     </div>
   );
 
-  // Les autres vues (Portfolio, Trading, StartupDetail) suivront le même pattern de design...
-  // Je vais continuer avec le reste si vous voulez
+  // Placeholder components for missing views
+  const NewsDetailView = ({ news, setActiveView }: any) => (
+    <div className="space-y-8">
+      <button onClick={() => setActiveView('news')} className="text-orange-400">← Retour</button>
+      <h1 className="text-3xl font-bold text-white">{news?.title || 'Actualité'}</h1>
+      <p className="text-white/60">Contenu de l'actualité...</p>
+    </div>
+  );
+
+  const HelpCenterView = ({ setActiveView }: any) => (
+    <div className="space-y-8">
+      <h1 className="text-3xl font-bold text-white">Centre d'aide</h1>
+      <p className="text-white/60">Comment pouvons-nous vous aider ?</p>
+    </div>
+  );
+
+  const TermsView = ({ setActiveView }: any) => (
+    <div className="space-y-8">
+      <h1 className="text-3xl font-bold text-white">Conditions d'utilisation</h1>
+      <p className="text-white/60">Nos conditions d'utilisation...</p>
+    </div>
+  );
+
+  const PrivacyView = ({ setActiveView }: any) => (
+    <div className="space-y-8">
+      <h1 className="text-3xl font-bold text-white">Politique de confidentialité</h1>
+      <p className="text-white/60">Notre politique de confidentialité...</p>
+    </div>
+  );
+
+  const AboutView = ({ setActiveView }: any) => (
+    <div className="space-y-8">
+      <h1 className="text-3xl font-bold text-white">À propos</h1>
+      <p className="text-white/60">À propos d'AfriStocks...</p>
+    </div>
+  );
+
+  const FundAdminDashboard = ({ setActiveView }: any) => (
+    <div className="space-y-8">
+      <h1 className="text-3xl font-bold text-white">Dashboard Admin</h1>
+      <p className="text-white/60">Panneau d'administration du fonds</p>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 relative overflow-hidden">
-      {/* Ambient Background Effects */}
-      <div className="fixed inset-0 pointer-events-none">
-        {/* Gradient Orbs */}
-        <div 
-          className="absolute w-[600px] h-[600px] rounded-full"
+    <FundProvider>
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 relative overflow-hidden">
+        {/* Ambient Background Effects */}
+        <div className="fixed inset-0 pointer-events-none">
+          <div
+            className="absolute w-[600px] h-[600px] rounded-full"
+            style={{
+              background: 'radial-gradient(circle, rgba(255,107,53,0.15) 0%, transparent 70%)',
+              filter: 'blur(100px)',
+              transform: `translate(${mousePosition.x * 0.02}px, ${mousePosition.y * 0.02}px)`,
+              top: '-20%',
+              right: '-10%',
+              transition: 'transform 0.3s ease-out'
+            }}
+          />
+          <div
+            className="absolute w-[500px] h-[500px] rounded-full"
+            style={{
+              background: 'radial-gradient(circle, rgba(0,217,163,0.15) 0%, transparent 70%)',
+              filter: 'blur(80px)',
+              transform: `translate(${-mousePosition.x * 0.02}px, ${-mousePosition.y * 0.02}px)`,
+              bottom: '-20%',
+              left: '-10%',
+              transition: 'transform 0.3s ease-out'
+            }}
+          />
+        </div>
+
+        <div
+          className="fixed inset-0 opacity-[0.03] pointer-events-none"
           style={{
-            background: 'radial-gradient(circle, rgba(255,107,53,0.15) 0%, transparent 70%)',
-            filter: 'blur(100px)',
-            transform: `translate(${mousePosition.x * 0.02}px, ${mousePosition.y * 0.02}px)`,
-            top: '-20%',
-            right: '-10%',
-            transition: 'transform 0.3s ease-out'
+            backgroundImage: `
+              linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
+            `,
+            backgroundSize: '50px 50px'
           }}
         />
-        <div 
-          className="absolute w-[500px] h-[500px] rounded-full"
-          style={{
-            background: 'radial-gradient(circle, rgba(0,217,163,0.15) 0%, transparent 70%)',
-            filter: 'blur(80px)',
-            transform: `translate(${-mousePosition.x * 0.02}px, ${-mousePosition.y * 0.02}px)`,
-            bottom: '-20%',
-            left: '-10%',
-            transition: 'transform 0.3s ease-out'
-          }}
-        />
+
+        <Header />
+        <AuthModal />
+        {showAccountTypeSelection && (
+          <AccountTypeSelection
+            onSelectType={(type) => {
+              setSelectedAccountType(type);
+              setShowAccountTypeSelection(false);
+              setAuthMode('register');
+              setShowAuthModal(true);
+            }}
+          />
+        )}
+
+        <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
+          {activeView === 'home' && <HomeView />}
+          {activeView === 'startups' && <StartupsView />}
+          {activeView === 'trading' && <TradingView isAuthenticated={isAuthenticated} user={user} setActiveView={setActiveView} />}
+          {activeView === 'portfolio' && <PortfolioView isAuthenticated={isAuthenticated} user={user} setActiveView={setActiveView} setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />}
+          {activeView === 'investment-fund' && <InvestmentFundView setActiveView={setActiveView} setCheckoutData={setCheckoutData} isAuthenticated={isAuthenticated} user={user} />}
+          {activeView === 'investment-checkout' && <InvestmentCheckoutView checkoutData={checkoutData} setActiveView={setActiveView} isAuthenticated={isAuthenticated} user={user} />}
+          {activeView === 'startup-detail' && selectedStartup && <StartupDetailView startup={selectedStartup} setActiveView={setActiveView} isAuthenticated={isAuthenticated} setShowAuthModal={setShowAuthModal} setAuthMode={setAuthMode} user={user} />}
+          {activeView === 'learn-trading' && <LearnTradingView setActiveView={setActiveView} />}
+          {activeView === 'formations' && <FormationsView setActiveView={setActiveView} setSelectedFormation={setSelectedFormation} />}
+          {activeView === 'formation-detail' && selectedFormation && <FormationDetailView formation={selectedFormation} setActiveView={setActiveView} isAuthenticated={isAuthenticated} setShowAuthModal={setShowAuthModal} setAuthMode={setAuthMode} user={user} />}
+          {activeView === 'faq' && <FAQView setActiveView={setActiveView} />}
+          {activeView === 'investment-guide' && <InvestmentGuideView setActiveView={setActiveView} />}
+          {activeView === 'news' && <NewsView setActiveView={setActiveView} setSelectedNews={setSelectedNews} />}
+          {activeView === 'news-detail' && selectedNews && <NewsDetailView news={selectedNews} setActiveView={setActiveView} />}
+          {activeView === 'help' && <HelpCenterView setActiveView={setActiveView} />}
+          {activeView === 'terms' && <TermsView setActiveView={setActiveView} />}
+          {activeView === 'privacy' && <PrivacyView setActiveView={setActiveView} />}
+          {activeView === 'about' && <AboutView setActiveView={setActiveView} />}
+          {activeView === 'fund-admin' && user?.role === 'ADMIN' && <FundAdminDashboard setActiveView={setActiveView} />}
+          {activeView === 'startup-dashboard' && user?.role === 'STARTUP' && (
+            <StartupDashboardView startup={user} setActiveView={setActiveView} />
+          )}
+        </main>
+
+        <style jsx>{`
+          @keyframes gradient {
+            0%, 100% {
+              background-position: 0% 50%;
+            }
+            50% {
+              background-position: 100% 50%;
+            }
+          }
+          
+          .animate-gradient {
+            background-size: 200% auto;
+            animation: gradient 3s ease infinite;
+          }
+          
+          .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+          }
+          
+          .glass-heavy {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+          }
+        `}</style>
       </div>
-
-      {/* Mesh Grid Pattern */}
-      <div 
-        className="fixed inset-0 opacity-[0.03] pointer-events-none"
-        style={{
-          backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
-          `,
-          backgroundSize: '50px 50px'
-        }}
-      />
-
-      <Header />
-      <AuthModal />
-
-      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-12">
-        {activeView === 'home' && <HomeView />}
-        {activeView === 'startups' && <StartupsView />}
-        {/* Les autres vues peuvent être ajoutées ici avec le même style */}
-      </main>
-
-      <style jsx>{`
-        @keyframes gradient {
-          0%, 100% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-        }
-        
-        .animate-gradient {
-          background-size: 200% auto;
-          animation: gradient 3s ease infinite;
-        }
-        
-        .glass {
-          background: rgba(255, 255, 255, 0.05);
-          backdrop-filter: blur(20px);
-          -webkit-backdrop-filter: blur(20px);
-        }
-        
-        .glass-heavy {
-          background: rgba(255, 255, 255, 0.08);
-          backdrop-filter: blur(40px);
-          -webkit-backdrop-filter: blur(40px);
-        }
-      `}</style>
-    </div>
+    </FundProvider>
   );
 };
 

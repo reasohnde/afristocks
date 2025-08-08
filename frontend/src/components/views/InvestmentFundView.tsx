@@ -1,0 +1,331 @@
+// views/InvestmentFundView.tsx
+import React, { useState } from 'react';
+import {
+  TrendingUp, Users, Clock, Mail, MessageSquare, Phone, AlertCircle,
+  ChevronDown, ChevronUp, ArrowLeft, Settings, CheckCircle, XCircle,
+  Calendar, DollarSign, Shield, Target, Award
+} from 'lucide-react';
+import { useFund } from '../../contexts/FundContext';
+
+interface InvestmentFundViewProps {
+  setActiveView: (view: string) => void;
+  isAuthenticated: boolean;
+  user: any;
+  setShowAuthModal: (show: boolean) => void;
+  setAuthMode: (mode: 'login' | 'register') => void;
+}
+
+const InvestmentFundView: React.FC<InvestmentFundViewProps> = ({
+  setActiveView,
+  isAuthenticated,
+  user,
+  setShowAuthModal,
+  setAuthMode
+}) => {
+  const { fundData, getTotalInvestors, investments } = useFund();
+  const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const progressPercentage = (fundData.raisedAmount / fundData.targetAmount) * 100;
+
+  const faqs = [
+    {
+      question: 'Que se passe-t-il après mon investissement ?',
+      answer: 'Vous recevez immédiatement une confirmation par email. Dès notre statut juridique établi, vous recevrez votre certificat officiel de parts.'
+    },
+    {
+      question: 'Mon argent est-il sécurisé ?',
+      answer: 'Oui, nous utilisons des passerelles de paiement sécurisées et votre investissement est tracé dans notre système.'
+    },
+    {
+      question: 'Quand vais-je recevoir ma confirmation officielle ?',
+      answer: 'Dans les 30 jours suivant l\'obtention de notre statut juridique officiel.'
+    },
+    {
+      question: 'Comment puis-je suivre la progression du projet ?',
+      answer: 'Vous recevrez des mises à jour mensuelles par email et pourrez suivre en temps réel sur votre dashboard.'
+    },
+    {
+      question: 'Puis-je récupérer mon investissement ?',
+      answer: 'Les investissements sont bloqués pendant la durée minimale de 3 ans, sauf cas exceptionnels.'
+    }
+  ];
+
+  const handleInvestClick = () => {
+    if (!isAuthenticated) {
+      setAuthMode('register');
+      setShowAuthModal(true);
+    } else {
+      setActiveView('investment-checkout');
+    }
+  };
+
+  const handleWhatsApp = () => {
+    const message = encodeURIComponent('Bonjour, je souhaite avoir plus d\'informations sur le fonds AfriStocks');
+    window.open(`https://wa.me/${fundData.whatsapp.replace(/\s/g, '')}?text=${message}`, '_blank');
+  };
+
+  const handleEmail = () => {
+    window.location.href = `mailto:${fundData.email}?subject=Information sur le fonds AfriStocks`;
+  };
+
+  // Statistiques récentes
+  const recentInvestors = investments
+    .filter(inv => inv.status === 'completed')
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5);
+
+  return (
+    <div className="min-h-screen">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <button
+          onClick={() => setActiveView('home')}
+          className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span>Retour</span>
+        </button>
+
+        {user?.role === 'ADMIN' && (
+          <button
+            onClick={() => setActiveView('admin-dashboard')}
+            className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-lg transition-all flex items-center gap-2"
+          >
+            <Settings className="w-4 h-4" />
+            <span>Admin Dashboard</span>
+          </button>
+        )}
+      </div>
+
+      {/* Hero Section */}
+      <div className="relative bg-gradient-to-br from-emerald-500/10 to-amber-500/10 rounded-3xl p-8 lg:p-12 mb-12 border border-emerald-500/20">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-emerald-500/20 to-transparent rounded-full blur-3xl" />
+
+        <div className="relative grid lg:grid-cols-2 gap-8 items-center">
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-emerald-500/30 to-emerald-600/10 rounded-2xl flex items-center justify-center">
+                <TrendingUp className="w-10 h-10 text-emerald-400" />
+              </div>
+              <div>
+                <h1 className="text-3xl lg:text-4xl font-bold text-white">{fundData.name}</h1>
+                <p className="text-emerald-400 font-medium">Fonds d'investissement certifié</p>
+              </div>
+            </div>
+
+            <p className="text-xl text-amber-400 font-semibold mb-4">{fundData.tagline}</p>
+            <p className="text-white/70 leading-relaxed mb-8">{fundData.description}</p>
+
+            {/* Stats rapides */}
+            <div className="grid grid-cols-3 gap-4">
+              <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
+                <Users className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
+                <p className="text-2xl font-bold text-white">{getTotalInvestors()}</p>
+                <p className="text-sm text-white/60">Investisseurs</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
+                <TrendingUp className="w-6 h-6 text-amber-400 mx-auto mb-2" />
+                <p className="text-2xl font-bold text-white">{fundData.expectedReturn}</p>
+                <p className="text-sm text-white/60">Rendement</p>
+              </div>
+              <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 text-center">
+                <Clock className="w-6 h-6 text-blue-400 mx-auto mb-2" />
+                <p className="text-2xl font-bold text-white">{fundData.duration}</p>
+                <p className="text-sm text-white/60">Durée</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20">
+            <h3 className="text-xl font-bold text-white mb-6">Objectif de levée de fonds</h3>
+
+            <div className="mb-4">
+              <div className="flex justify-between items-baseline mb-2">
+                <span className="text-3xl font-bold text-white">{fundData.raisedAmount.toLocaleString()}€</span>
+                <span className="text-lg text-white/60">sur {fundData.targetAmount.toLocaleString()}€</span>
+              </div>
+
+              <div className="h-4 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all duration-1000"
+                  style={{ width: `${progressPercentage}%` }}
+                />
+              </div>
+
+              <div className="flex justify-between items-center mt-2">
+                <span className="text-sm text-white/60">{progressPercentage.toFixed(1)}% collecté</span>
+                <span className="text-sm text-white/60">{(fundData.targetAmount - fundData.raisedAmount).toLocaleString()}€ restant</span>
+              </div>
+            </div>
+
+            {/* CTA Principal */}
+            <button
+              onClick={handleInvestClick}
+              disabled={!fundData.isActive}
+              className={`w-full py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2 ${fundData.isActive
+                  ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-lg hover:shadow-emerald-500/25'
+                  : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                }`}
+            >
+              {fundData.isActive ? (
+                <>
+                  <span>Investir maintenant - Min {fundData.minInvestment}€</span>
+                  <DollarSign className="w-5 h-5" />
+                </>
+              ) : (
+                'Investissements temporairement suspendus'
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Warning Banner */}
+      {!fundData.isActive && (
+        <div className="bg-amber-500/20 border border-amber-500/30 rounded-xl p-4 mb-8 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-amber-400 font-semibold">Investissements suspendus</p>
+            <p className="text-white/70 text-sm">Les investissements sont temporairement suspendus. Veuillez revenir plus tard.</p>
+          </div>
+        </div>
+      )}
+
+      {/* Transparence */}
+      <div className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-6 mb-12 flex items-start gap-4">
+        <AlertCircle className="w-8 h-8 text-amber-400 flex-shrink-0" />
+        <div>
+          <h3 className="text-xl font-bold text-white mb-2">Information importante</h3>
+          <p className="text-white/70 leading-relaxed">
+            Nous sommes en cours de formalisation juridique. Votre investissement est une preuve de soutien anticipé.
+            Une fois notre statut officiellement établi, vous recevrez automatiquement votre certificat de parts ou votre contrat officiel.
+          </p>
+        </div>
+      </div>
+
+      {/* Avantages */}
+      <div className="mb-12">
+        <h2 className="text-2xl font-bold text-white mb-6">Pourquoi investir dans notre fonds ?</h2>
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20">
+            <Target className="w-10 h-10 text-emerald-400 mb-4" />
+            <h4 className="text-lg font-semibold text-white mb-2">Diversification</h4>
+            <p className="text-white/70 text-sm">Portfolio diversifié de startups africaines soigneusement sélectionnées</p>
+          </div>
+          <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20">
+            <Shield className="w-10 h-10 text-blue-400 mb-4" />
+            <h4 className="text-lg font-semibold text-white mb-2">Sécurité</h4>
+            <p className="text-white/70 text-sm">Due diligence approfondie et suivi rigoureux des investissements</p>
+          </div>
+          <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20">
+            <Award className="w-10 h-10 text-amber-400 mb-4" />
+            <h4 className="text-lg font-semibold text-white mb-2">Expertise</h4>
+            <p className="text-white/70 text-sm">Équipe expérimentée avec un track record prouvé</p>
+          </div>
+          <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20">
+            <Calendar className="w-10 h-10 text-purple-400 mb-4" />
+            <h4 className="text-lg font-semibold text-white mb-2">Flexibilité</h4>
+            <p className="text-white/70 text-sm">Investissement minimum accessible et options de sortie flexibles</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Investisseurs récents */}
+      {recentInvestors.length > 0 && (
+        <div className="mb-12">
+          <h2 className="text-2xl font-bold text-white mb-6">Investisseurs récents</h2>
+          <div className="bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 overflow-hidden">
+            <div className="p-6 space-y-4">
+              {recentInvestors.map((investor, index) => (
+                <div key={investor.id} className="flex items-center justify-between pb-4 border-b border-white/10 last:border-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-bold">
+                        {investor.userName.split(' ').map(n => n[0]).join('').toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-white font-medium">{investor.userName}</p>
+                      <p className="text-white/60 text-sm">
+                        {new Date(investor.date).toLocaleDateString('fr-FR')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-emerald-400 font-semibold">{investor.amount.toLocaleString()}€</p>
+                    <div className="flex items-center gap-1 text-xs text-emerald-400">
+                      <CheckCircle className="w-3 h-3" />
+                      <span>Confirmé</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FAQ */}
+      <div className="mb-12">
+        <h2 className="text-2xl font-bold text-white mb-6">Questions fréquentes</h2>
+        <div className="space-y-4">
+          {faqs.map((faq, index) => (
+            <div
+              key={index}
+              className="bg-white/10 backdrop-blur-xl rounded-xl border border-white/20 overflow-hidden"
+            >
+              <button
+                onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}
+                className="w-full px-6 py-4 flex items-center justify-between hover:bg-white/5 transition-colors"
+              >
+                <span className="text-white font-medium text-left">{faq.question}</span>
+                {expandedFaq === index ? (
+                  <ChevronUp className="w-5 h-5 text-white/60 flex-shrink-0" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-white/60 flex-shrink-0" />
+                )}
+              </button>
+              {expandedFaq === index && (
+                <div className="px-6 pb-4">
+                  <p className="text-white/70">{faq.answer}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Contact */}
+      <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-8 border border-white/20 text-center">
+        <h2 className="text-2xl font-bold text-white mb-4">Une question ? Contactez-nous !</h2>
+        <p className="text-white/70 mb-8">Notre équipe est là pour répondre à toutes vos questions</p>
+
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <button
+            onClick={handleEmail}
+            className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 px-6 py-3 rounded-xl transition-all"
+          >
+            <Mail className="w-5 h-5 text-white" />
+            <span className="text-white">{fundData.email}</span>
+          </button>
+
+          <button
+            onClick={handleWhatsApp}
+            className="flex items-center justify-center gap-2 bg-green-500/20 hover:bg-green-500/30 px-6 py-3 rounded-xl transition-all"
+          >
+            <MessageSquare className="w-5 h-5 text-green-400" />
+            <span className="text-green-400">WhatsApp</span>
+          </button>
+
+          <button
+            className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 px-6 py-3 rounded-xl transition-all"
+          >
+            <Phone className="w-5 h-5 text-white" />
+            <span className="text-white">{fundData.phone}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default InvestmentFundView;
