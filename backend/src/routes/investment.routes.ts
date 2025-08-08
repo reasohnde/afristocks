@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { InvestmentService } from '../services/investment.service';
-import { authenticateToken } from '../middleware/auth.middleware';
+import { authenticate, requireInvestorAccess } from '../middleware/auth.middleware';
 import { validateRequest } from '../middleware/validation.middleware';
 import { body, param, query } from 'express-validator';
 import { Request, Response } from 'express';
@@ -17,6 +17,7 @@ const paginationValidator = [
   query('offset').optional().isInt({ min: 0 })
 ];
 
+// Routes publiques (sans authentification)
 router.get('/startups',
   paginationValidator,
   validateRequest,
@@ -24,7 +25,7 @@ router.get('/startups',
     try {
       const limit = parseInt(req.query.limit as string) || 20;
       const offset = parseInt(req.query.offset as string) || 0;
-      
+
       const startups = await InvestmentService.getStartups(limit, offset);
       res.json({
         success: true,
@@ -58,9 +59,49 @@ router.get('/startups/:id',
   }
 );
 
-router.use(authenticateToken);
+// Routes protégées - nécessitent authentification
+router.use(authenticate);
 
+// Récupérer les investissements de l'utilisateur connecté
+router.get('/my-investments', async (req, res) => {
+  try {
+    const investments = await InvestmentService.getUserInvestments(req.user!.userId);
+    res.json({
+      success: true,
+      data: investments
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
+// Tableau de bord investisseur
+router.get('/dashboard', async (req, res) => {
+  try {
+    const dashboard = await InvestmentService.getInvestorDashboard(req.user!.userId);
+    res.json({
+      success: true,
+      data: dashboard
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
+// Routes qui nécessitent KYC vérifié et rôle investisseur
+// Utilise le middleware requireInvestorAccess qui vérifie :
+// - Authentification
+// - Rôle INVESTOR ou USER
+// - KYC status VERIFIED
+// - Email vérifié
 router.post('/invest/:startupId',
+  requireInvestorAccess,
   investValidator,
   validateRequest,
   async (req: Request, res: Response) => {
@@ -83,20 +124,5 @@ router.post('/invest/:startupId',
     }
   }
 );
-
-router.get('/my-investments', async (req, res) => {
-  try {
-    const investments = await InvestmentService.getUserInvestments(req.user!.userId);
-    res.json({
-      success: true,
-      data: investments
-    });
-  } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      message: error.message
-    });
-  }
-});
 
 export { router as investmentRoutes };

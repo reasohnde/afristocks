@@ -1,14 +1,15 @@
 import { prisma } from '../config/database';
 import { Decimal } from '@prisma/client/runtime/library';
 import { v4 as uuidv4 } from 'uuid';
+import { WalletType, Currency } from '@prisma/client';
 
 export class WalletService {
-  static async getBalance(userId: string) {
+  static async getBalance(walletId: string) {
     const wallet = await prisma.wallet.findUnique({
-      where: { userId },
+      where: { id: walletId },
       include: {
         transactions: {
-          orderBy: { createdAt: 'desc' },
+          orderBy: { created_at: 'desc' },
           take: 10
         }
       }
@@ -20,28 +21,24 @@ export class WalletService {
 
     return {
       balance: wallet.balance.toNumber(),
-      lockedBalance: wallet.lockedBalance.toNumber(),
+      lockedBalance: wallet.locked_balance.toNumber(),
       currency: wallet.currency,
       recentTransactions: wallet.transactions
     };
   }
 
-  static async deposit(userId: string, amount: number, paymentMethod: string) {
+  static async deposit(walletId: string, userId: string, amount: number, paymentMethod: string) {
     const reference = `DEP-${Date.now()}-${uuidv4().slice(0, 8)}`;
 
     const transaction = await prisma.$transaction(async (tx) => {
-      const wallet = await tx.wallet.findUnique({
-        where: { userId }
-      });
+      const wallet = await tx.wallet.findUnique({ where: { id: walletId } });
 
-      if (!wallet) {
-        throw new Error('Wallet non trouvé');
-      }
+      if (!wallet) throw new Error('Wallet non trouvé');
 
       const transaction = await tx.transaction.create({
         data: {
-          userId,
-          walletId: wallet.id,
+          user_id: userId,
+          wallet_id: wallet.id,
           type: 'DEPOSIT',
           status: 'PENDING',
           amount: new Decimal(amount),
@@ -80,33 +77,24 @@ export class WalletService {
     };
   }
 
-  static async withdraw(userId: string, amount: number, bankDetails: any) {
+  static async withdraw(walletId: string, userId: string, amount: number, bankDetails: any) {
     const reference = `WTH-${Date.now()}-${uuidv4().slice(0, 8)}`;
 
     const transaction = await prisma.$transaction(async (tx) => {
-      const wallet = await tx.wallet.findUnique({
-        where: { userId }
-      });
+      const wallet = await tx.wallet.findUnique({ where: { id: walletId } });
+      if (!wallet) throw new Error('Wallet non trouvé');
 
-      if (!wallet) {
-        throw new Error('Wallet non trouvé');
-      }
-
-      if (wallet.balance.lessThan(amount)) {
-        throw new Error('Solde insuffisant');
-      }
+      if (wallet.balance.lessThan(amount)) throw new Error('Solde insuffisant');
 
       const fee = amount * 0.01;
       const totalAmount = amount + fee;
 
-      if (wallet.balance.lessThan(totalAmount)) {
-        throw new Error('Solde insuffisant (frais inclus)');
-      }
+      if (wallet.balance.lessThan(totalAmount)) throw new Error('Solde insuffisant (frais inclus)');
 
       const transaction = await tx.transaction.create({
         data: {
-          userId,
-          walletId: wallet.id,
+          user_id: userId,
+          wallet_id: wallet.id,
           type: 'WITHDRAWAL',
           status: 'PENDING',
           amount: new Decimal(amount),
@@ -123,7 +111,7 @@ export class WalletService {
           balance: {
             decrement: totalAmount
           },
-          lockedBalance: {
+          locked_balance: {
             increment: totalAmount
           }
         }
@@ -145,25 +133,18 @@ export class WalletService {
     };
   }
 
-  static async getTransactionHistory(userId: string, limit = 20, offset = 0) {
-    const wallet = await prisma.wallet.findUnique({
-      where: { userId }
-    });
-
-    if (!wallet) {
-      throw new Error('Wallet non trouvé');
-    }
+  static async getTransactionHistory(walletId: string, limit = 20, offset = 0) {
+    const wallet = await prisma.wallet.findUnique({ where: { id: walletId } });
+    if (!wallet) throw new Error('Wallet non trouvé');
 
     const [transactions, total] = await Promise.all([
       prisma.transaction.findMany({
-        where: { walletId: wallet.id },
-        orderBy: { createdAt: 'desc' },
+        where: { wallet_id: wallet.id },
+        orderBy: { created_at: 'desc' },
         take: limit,
         skip: offset
       }),
-      prisma.transaction.count({
-        where: { walletId: wallet.id }
-      })
+      prisma.transaction.count({ where: { wallet_id: wallet.id } })
     ]);
 
     return {
@@ -175,7 +156,7 @@ export class WalletService {
         fee: t.fee.toNumber(),
         reference: t.reference,
         description: t.description,
-        createdAt: t.createdAt
+        createdAt: t.created_at
       })),
       pagination: {
         total,

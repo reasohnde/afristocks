@@ -1,0 +1,693 @@
+≈// schema.prisma - Configuration complète de la base de données
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== ENUMS =====
+
+// Enum pour les rôles utilisateur
+enum UserRole {
+  USER
+  STARTUP
+  ADMIN
+  INVESTOR
+}
+
+// Enum pour les types de transactions
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  INVESTMENT
+  DIVIDEND
+  FEE
+  REFUND
+  TRANSFER
+  FUND_INVESTMENT
+}
+
+// Enum pour les statuts de transaction
+enum TransactionStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+// Enum pour les statuts d'investissement
+enum InvestmentStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+// Enum pour les statuts du fonds
+enum FundStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+  COMPLETED
+}
+
+// Enum pour les statuts KYC
+enum KycStatus {
+  PENDING
+  IN_REVIEW
+  VERIFIED
+  REJECTED
+}
+
+// Enum pour les types de wallets
+enum WalletType {
+  FIAT // EUR, USD, XOF, etc.
+  CRYPTO // Bitcoin, Ethereum, etc.
+  MOBILE_MONEY // Orange Money, MTN Money, etc.
+}
+
+// Enum pour les devises supportées
+enum Currency {
+  // Devises FIAT
+  EUR // Euro
+  USD // Dollar US
+  XOF // Franc CFA (UEMOA)
+  XAF // Franc CFA (CEMAC)
+
+  // Cryptomonnaies
+  BTC // Bitcoin
+  ETH // Ethereum
+  USDT // Tether
+
+  // Mobile Money (utilise la devise locale)
+  ORANGE_MONEY // Orange Money (XOF/XAF)
+  MTN_MONEY // MTN Mobile Money
+  MOOV_MONEY // Moov Money
+  WAVE // Wave
+}
+
+// Enums pour les news
+enum NewsCategory {
+  MARKET_UPDATE
+  STARTUP_NEWS
+  INVESTMENT
+  REGULATION
+  TECHNOLOGY
+  ANALYSIS
+  EVENT
+  PARTNERSHIP
+}
+
+enum NewsImportance {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+// ===== MODELS =====
+
+// Modèle User principal
+model User {
+  id                 String    @id @default(uuid())
+  email              String    @unique
+  passwordHash       String    @map("password_hash")
+  name               String
+  phone_number       String?
+  role               UserRole  @default(USER)
+  kycStatus          KycStatus @default(PENDING)
+  email_verified     Boolean   @default(false)
+  isActive           Boolean   @default(true)
+  two_factor_enabled Boolean   @default(false)
+  two_factor_secret  String?
+  last_login         DateTime?
+  created_at         DateTime  @default(now())
+  updated_at         DateTime  @updatedAt
+
+  // Relations
+  profile         UserProfile?
+  wallets         Wallet[]
+  startup         Startup?
+  investments     Investment[]
+  fundInvestments FundInvestment[]
+  fundInvestmentsOld FundInvestmentOld[]
+  transactions    Transaction[]
+  loginAttempts   LoginAttempt[]
+  notifications   Notification[]
+  refreshTokens   RefreshToken[]
+  documents       Document[]
+  news            News[]
+  newsNotifications NewsNotification[]
+  
+  // Nouvelles relations pour notifications et analytics
+  devices        UserDevice[]
+  subscriptions  UserSubscription[]
+  newsViews      NewsView[]
+  newsInteractions NewsInteraction[]
+  readingMetrics ReadingMetric[]
+
+  @@map("users")
+}
+
+// Profil utilisateur
+model UserProfile {
+  id           String    @id @default(uuid())
+  userId       String    @unique @map("user_id")
+  firstName    String    @map("first_name")
+  lastName     String    @map("last_name")
+  dateOfBirth  DateTime? @map("date_of_birth")
+  address      String?
+  city         String?
+  country      String?
+  postalCode   String?   @map("postal_code")
+  bio          String?
+  avatarUrl    String?   @map("avatar_url")
+  investorType String?   @map("investor_type")
+  riskProfile  String?   @map("risk_profile")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+// Startup
+model Startup {
+  id                 String    @id @default(uuid())
+  userId             String    @unique @map("user_id")
+  registrationNumber String    @unique @map("registration_number")
+  companyName        String    @map("company_name")
+  legalName          String    @map("legal_name")
+  description        String
+  logo               String?
+  website            String?
+  email              String?
+  phoneNumber        String?   @map("phone_number")
+  address            String?
+  city               String?
+  country            String
+  sector             String
+  foundedDate        DateTime? @map("founded_date")
+  teamSize           Int       @default(1) @map("team_size")
+  pitch              String?
+  businessPlan       String?   @map("business_plan")
+  financialReport    String?   @map("financial_report")
+  valuation          Decimal   @default(0) @db.Decimal(20, 2)
+  totalShares        Int       @default(0) @map("total_shares")
+  availableShares    Int       @default(0) @map("available_shares")
+  sharePrice         Decimal   @default(0) @map("share_price") @db.Decimal(20, 2)
+  minInvestment      Decimal   @default(0) @map("min_investment") @db.Decimal(20, 2)
+  maxInvestment      Decimal?  @map("max_investment") @db.Decimal(20, 2)
+  raisedAmount       Decimal   @default(0) @map("raised_amount") @db.Decimal(20, 2)
+  targetAmount       Decimal   @default(0) @map("target_amount") @db.Decimal(20, 2)
+  verified           Boolean   @default(false)
+  isActive           Boolean   @default(true) @map("is_active")
+  startDate          DateTime? @map("start_date")
+  endDate            DateTime? @map("end_date")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  investments Investment[]
+  documents   StartupDocument[]
+  updates     StartupUpdate[]
+
+  @@map("startups")
+}
+
+model Document {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  documentName String   @map("document_name")
+  documentType String   @map("document_type") // 'kyc', 'identity', etc.
+  fileUrl      String   @map("file_url")
+  status       String   @default("pending") // 'pending', 'approved', 'rejected'
+  uploadedAt   DateTime @default(now()) @map("uploaded_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("documents")
+}
+
+// Documents de la startup
+model StartupDocument {
+  id         String   @id @default(uuid())
+  startupId  String   @map("startup_id")
+  title      String
+  type       String // pitch_deck, financial_report, business_plan, etc.
+  url        String
+  size       Int? // en bytes
+  uploadedAt DateTime @default(now()) @map("uploaded_at")
+
+  startup Startup @relation(fields: [startupId], references: [id], onDelete: Cascade)
+
+  @@map("startup_documents")
+}
+
+// Mises à jour de la startup
+model StartupUpdate {
+  id        String   @id @default(uuid())
+  startupId String   @map("startup_id")
+  title     String
+  content   String
+  isPublic  Boolean  @default(true) @map("is_public")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  startup Startup @relation(fields: [startupId], references: [id], onDelete: Cascade)
+
+  @@map("startup_updates")
+}
+
+// Tentatives de connexion
+model LoginAttempt {
+  id         String   @id @default(uuid())
+  userId     String?  @map("user_id")
+  email      String
+  ipAddress  String   @map("ip_address")
+  userAgent  String?  @map("user_agent")
+  successful Boolean
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([email])
+  @@index([createdAt])
+  @@map("login_attempts")
+}
+
+// Tokens de rafraîchissement
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
+// Portefeuille - Version améliorée avec support multi-devises
+model Wallet {
+  id            String     @id @default(uuid())
+  userId        String     @map("user_id")
+  walletType    WalletType @map("wallet_type")
+  currency      Currency
+  balance       Decimal    @default(0) @db.Decimal(20, 8)
+  lockedBalance Decimal    @default(0) @map("locked_balance") @db.Decimal(20, 8)
+  isPrimary     Boolean    @default(false) @map("is_primary")
+  isActive      Boolean    @default(true) @map("is_active")
+
+  // Informations spécifiques selon le type
+  walletAddress String? @map("wallet_address") // Pour crypto
+  mobileNumber  String? @map("mobile_number") // Pour mobile money
+  iban          String? // Pour wallet EUR/USD
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactionsFrom Transaction[] @relation("FromWallet")
+  transactionsTo   Transaction[] @relation("ToWallet")
+
+  // Index unique : un seul wallet actif par type et devise pour un utilisateur
+  @@unique([userId, walletType, currency])
+  @@index([userId])
+  @@map("wallets")
+}
+
+// Transactions
+model Transaction {
+  id           String            @id @default(uuid())
+  userId       String            @map("user_id")
+  fromWalletId String?           @map("from_wallet_id")
+  toWalletId   String?           @map("to_wallet_id")
+  type         TransactionType
+  status       TransactionStatus @default(PENDING)
+  amount       Decimal           @db.Decimal(20, 2)
+  fee          Decimal           @default(0) @db.Decimal(20, 2)
+  description  String?
+  reference    String            @unique
+  metadata     Json?
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fromWallet Wallet? @relation("FromWallet", fields: [fromWalletId], references: [id])
+  toWallet   Wallet? @relation("ToWallet", fields: [toWalletId], references: [id])
+
+  @@index([userId])
+  @@index([fromWalletId])
+  @@index([toWalletId])
+  @@index([type])
+  @@index([status])
+  @@map("transactions")
+}
+
+// Investissements
+model Investment {
+  id           String           @id @default(uuid())
+  userId       String           @map("user_id")
+  startupId    String           @map("startup_id")
+  amount       Decimal          @db.Decimal(20, 2)
+  shares       Int              @default(0)
+  sharePrice   Decimal          @map("share_price") @db.Decimal(20, 2)
+  status       InvestmentStatus @default(ACTIVE)
+  investedAt   DateTime         @default(now()) @map("invested_at")
+  maturityDate DateTime?        @map("maturity_date")
+  returnAmount Decimal?         @map("return_amount") @db.Decimal(20, 2)
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startup Startup @relation(fields: [startupId], references: [id])
+
+  @@index([userId])
+  @@index([startupId])
+  @@index([status])
+  @@map("investments")
+}
+
+
+
+// ===== MODÈLES POUR LE FONDS D'INVESTISSEMENT =====
+
+// Fonds d'investissement AfriStocks (modèle simplifié)
+model Fund {
+  id             String       @id @default(cuid())
+  name           String
+  tagline        String?
+  description    String?
+  targetAmount   Float        @default(50000)
+  raisedAmount   Float        @default(0)
+  minInvestment  Float        @default(50)
+  maxInvestment  Float        @default(10000)
+  expectedReturn String       @default("15-25%")
+  duration       String       @default("3-5 ans")
+  isActive       Boolean      @default(true)
+  startDate      DateTime     @default(now())
+  endDate        DateTime?
+  email          String       @default("invest@afristocks.com")
+  phone          String       @default("+225 01 23 45 67 89")
+  whatsapp       String       @default("+225 01 23 45 67 89")
+  
+  investments    FundInvestment[]
+  
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @updatedAt
+}
+
+// Relation dans le modèle User pour le nouveau FundInvestment
+
+// Fonds d'investissement AfriStocks (ancien modèle - à supprimer)
+model InvestmentFund {
+  id               String      @id @default(uuid())
+  name             String
+  description      String
+  targetAmount     Decimal     @map("target_amount") @db.Decimal(20, 2)
+  raisedAmount     Decimal     @default(0) @map("raised_amount") @db.Decimal(20, 2)
+  minInvestment    Decimal     @map("min_investment") @db.Decimal(20, 2)
+  maxInvestment    Decimal?    @map("max_investment") @db.Decimal(20, 2)
+  expectedReturn   String      @map("expected_return") // Ex: "15-25%"
+  duration         String      // Ex: "3-5 ans"
+  status           FundStatus  @default(ACTIVE)
+  startDate        DateTime    @default(now()) @map("start_date")
+  endDate          DateTime?   @map("end_date")
+  createdAt        DateTime    @default(now()) @map("created_at")
+  updatedAt        DateTime    @updatedAt @map("updated_at")
+
+  investmentsOld FundInvestmentOld[]
+  updates     FundUpdate[]
+
+  @@map("investment_funds")
+}
+
+// Investissements dans le fonds (modèle simplifié)
+model FundInvestment {
+  id             String       @id @default(cuid())
+  userId         String?      // Nullable pour investissements anonymes
+  userName       String
+  userEmail      String
+  amount         Float
+  paymentMethod  String
+  status         String       @default("completed")
+  
+  // Relations
+  user           User?        @relation(fields: [userId], references: [id])
+  fund           Fund         @relation(fields: [fundId], references: [id])
+  fundId         String
+  
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @updatedAt
+  
+  @@index([fundId])
+  @@index([userId])
+  @@index([userEmail])
+}
+
+// Investissements dans le fonds (ancien modèle - à supprimer)
+model FundInvestmentOld {
+  id                    String            @id @default(uuid())
+  fundId                String            @map("fund_id")
+  userId                String            @map("user_id")
+  amount                Decimal           @db.Decimal(20, 2)
+  participationPercent  Decimal           @map("participation_percent") @db.Decimal(5, 2)
+  status                InvestmentStatus  @default(ACTIVE)
+  paymentMethod         String            @map("payment_method")
+  paymentReference      String?           @map("payment_reference")
+  kycData               Json?             @map("kyc_data") // Stocke les données KYC
+  investedAt            DateTime          @default(now()) @map("invested_at")
+  confirmedAt           DateTime?         @map("confirmed_at")
+  certificateIssued     Boolean           @default(false) @map("certificate_issued")
+  certificateIssuedAt   DateTime?         @map("certificate_issued_at")
+  createdAt             DateTime          @default(now()) @map("created_at")
+  updatedAt             DateTime          @updatedAt @map("updated_at")
+
+  fund InvestmentFund @relation(fields: [fundId], references: [id])
+  user User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([fundId])
+  @@index([userId])
+  @@index([status])
+  @@map("fund_investments")
+}
+
+// Mises à jour du fonds
+model FundUpdate {
+  id        String   @id @default(uuid())
+  fundId    String   @map("fund_id")
+  title     String
+  content   String
+  type      String   // 'news', 'report', 'milestone', etc.
+  isPublic  Boolean  @default(true) @map("is_public")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  fund InvestmentFund @relation(fields: [fundId], references: [id])
+
+  @@map("fund_updates")
+}
+
+// ===== MODÈLES POUR LES NEWS =====
+
+// Modèle News principal
+model News {
+  id          String      @id @default(cuid())
+  title       String
+  summary     String?     @db.Text
+  content     String      @db.Text
+  imageUrl    String?
+  videoUrl    String?
+  category    NewsCategory
+  importance  NewsImportance @default(NORMAL)
+  tags        String[]
+  metadata    Json?       @default("{}")
+  
+  // Références
+  authorId    String
+  author      User        @relation(fields: [authorId], references: [id])
+  
+  // Timestamps et état
+  publishedAt DateTime?
+  scheduledAt DateTime?
+  isActive    Boolean     @default(true)
+  viewCount   Int         @default(0)
+  
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  // Statistiques
+  shareCount     Int      @default(0)
+  completedReads Int      @default(0)
+  
+  // Relations
+  notifications NewsNotification[]
+  views         NewsView[]
+  interactions  NewsInteraction[]
+  readingMetrics ReadingMetric[]
+  
+  // Index pour les performances
+  @@index([publishedAt, importance])
+  @@index([category])
+  @@index([isActive, publishedAt])
+  
+  @@map("news")
+}
+
+// Notifications de news
+model NewsNotification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  newsId    String
+  news      News     @relation(fields: [newsId], references: [id])
+  
+  title     String
+  body      String   @db.Text
+  data      Json?
+  
+  sent      Boolean  @default(false)
+  sentAt    DateTime?
+  read      Boolean  @default(false)
+  readAt    DateTime?
+  
+  createdAt DateTime @default(now())
+  
+  @@index([userId, read])
+  @@index([newsId])
+  
+  @@map("news_notifications")
+}
+
+// ========== GESTION DES APPAREILS ==========
+model UserDevice {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  fcmToken  String?  @unique
+  platform  String   // 'web', 'ios', 'android'
+  deviceInfo Json?   // Informations additionnelles sur l'appareil
+  lastActive DateTime @default(now())
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([fcmToken])
+  
+  @@map("user_devices")
+}
+
+// ========== ABONNEMENTS AUX TOPICS ==========
+model UserSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  topic     String   // 'news', 'investments', etc.
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, topic])
+  @@index([topic])
+  
+  @@map("user_subscriptions")
+}
+
+// ========== HISTORIQUE DES NOTIFICATIONS ==========
+// Mise à jour du modèle Notification existant
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  user      User?    @relation(fields: [userId], references: [id])
+  
+  title     String
+  body      String   @db.Text
+  data      Json?    // Données additionnelles
+  topic     String?  // Si envoyée à un topic
+  
+  sent      Boolean  @default(false)
+  sentAt    DateTime?
+  read      Boolean  @default(false)
+  readAt    DateTime?
+  clicked   Boolean  @default(false)
+  clickedAt DateTime?
+  
+  createdAt DateTime @default(now())
+  
+  @@index([userId, read])
+  @@index([topic])
+  @@index([sentAt])
+  
+  @@map("notifications")
+}
+
+// ========== ANALYTICS - VUES ==========
+model NewsView {
+  id        String   @id @default(cuid())
+  newsId    String
+  news      News     @relation(fields: [newsId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  source    String   // 'list', 'detail', 'notification', 'search'
+  viewedAt  DateTime @default(now())
+  
+  @@index([newsId])
+  @@index([userId])
+  @@index([viewedAt])
+  @@index([source])
+  
+  @@map("news_views")
+}
+
+// ========== ANALYTICS - INTERACTIONS ==========
+model NewsInteraction {
+  id        String   @id @default(cuid())
+  newsId    String
+  news      News     @relation(fields: [newsId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  
+  action    String   // 'share', 'save', 'comment', 'like'
+  value     Json?    // Valeur additionnelle (ex: commentaire)
+  
+  createdAt DateTime @default(now())
+  
+  @@index([newsId, action])
+  @@index([userId])
+  @@index([createdAt])
+  
+  @@map("news_interactions")
+}
+
+// ========== ANALYTICS - MÉTRIQUES DE LECTURE ==========
+model ReadingMetric {
+  id          String   @id @default(cuid())
+  newsId      String
+  news        News     @relation(fields: [newsId], references: [id])
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  duration    Int      // Durée en secondes
+  scrollDepth Int      // Pourcentage de scroll (0-100)
+  completed   Boolean  @default(false)
+  
+  startTime   DateTime
+  endTime     DateTime
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([newsId])
+  @@index([userId])
+  @@index([completed])
+  
+  @@map("reading_metrics")
+}

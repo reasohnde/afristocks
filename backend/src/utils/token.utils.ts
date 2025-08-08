@@ -9,22 +9,24 @@ import { TokenPayload } from '../types/auth.types';
 export function generateTokens(user: User) {
   const payload: TokenPayload = {
     userId: user.id,
+    id: user.id, // Doublon pour compatibilité
     email: user.email,
     role: user.role,
+    name: user.name // Ajouter le nom pour le debug
   };
-  
+
   const accessToken = jwt.sign(
     { ...payload, type: 'access' },
     process.env.JWT_SECRET!,
     { expiresIn: '15m' }
   );
-  
+
   const refreshToken = jwt.sign(
     { ...payload, type: 'refresh' },
     process.env.JWT_SECRET!,
     { expiresIn: '7d' }
   );
-  
+
   return { accessToken, refreshToken };
 }
 
