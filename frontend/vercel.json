@@ -1,14 +1,6 @@
 {
     "version": 2,
-    "builds": [
-        {
-            "src": "package.json",
-            "use": "@vercel/next"
-        }
-    ],
-    "env": {
-        "NEXT_PUBLIC_API_URL": "@next_public_api_url"
-    },
+    "builds": [],
     "headers": [
         {
             "source": "/(.*)",
@@ -28,10 +20,5 @@
             ]
         }
     ],
-    "rewrites": [
-        {
-            "source": "/api/(.*)",
-            "destination": "/api/$1"
-        }
-    ]
+    "rewrites": []
 }
