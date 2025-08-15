@@ -12,7 +12,7 @@ COPY server.js ./
 COPY routes ./routes
 COPY middleware ./middleware
 COPY model ./model
-COPY config ./config
+# Le dossier config n'est pas nécessaire pour server.js et peut être absent du contexte
 
 # Port d'écoute
 ENV PORT=5001
