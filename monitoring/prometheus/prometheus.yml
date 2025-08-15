@@ -1,0 +1,73 @@
+# prometheus/prometheus.yml
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'production-monitor'
+    environment: 'production'
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+# Load rules
+rule_files:
+  - "alerts.yml"
+
+# Scrape configurations
+scrape_configs:
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Node Exporter
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node_exporter:9100']
+    relabel_configs:
+      - source_labels: [__address__]
+        regex: '([^:]+):\d+'
+        target_label: instance
+        replacement: '${1}'
+
+  # Docker containers
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+
+  # Application metrics
+  - job_name: 'application'
+    static_configs:
+      - targets: ['app:3000']
+    metrics_path: '/metrics'
+
+  # Nginx metrics
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx_exporter:9113']
+
+  # Blackbox exporter - HTTP checks
+  - job_name: 'blackbox-http'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]
+    static_configs:
+      - targets:
+          - https://votredomaine.com
+          - https://api.votredomaine.com
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox_exporter:9115
+
+  # Database metrics (exemple PostgreSQL)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres_exporter:9187']

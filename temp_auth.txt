@@ -1,0 +1,98 @@
+  const AuthScreen = () => {
+    const [isLogin, setIsLogin] = useState(true);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [name, setName] = useState('');
+    const [loading, setLoading] = useState(false);
+
+    const handleAuth = async () => {
+      if (!email || !password || (!isLogin && !name)) {
+        Alert.alert('Erreur', 'Veuillez remplir tous les champs');
+        return;
+      }
+
+      setLoading(true);
+      // Simulate API call
+      setTimeout(() => {
+        setUser({
+          id: '1',
+          email,
+          name: name || 'Investisseur Test',
+          role: 'INVESTOR',
+          walletBalance: 50000,
+        });
+        setIsAuthenticated(true);
+        setLoading(false);
+      }, 1500);
+    };
+
+    return (
+      <SafeAreaView style={styles.container}>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.authContainer}
+        >
+          <View style={styles.authHeader}>
+            <Text style={styles.authLogo}>💹</Text>
+            <Text style={styles.authTitle}>AfriStocks</Text>
+            <Text style={styles.authSubtitle}>
+              Investissez dans l'avenir de l'Afrique
+            </Text>
+          </View>
+
+          <View style={styles.authForm}>
+            {!isLogin && (
+              <TextInput
+                style={styles.input}
+                placeholder="Nom complet"
+                value={name}
+                onChangeText={setName}
+                autoCapitalize="words"
+              />
+            )}
+            
+            <TextInput
+              style={styles.input}
+              placeholder="Email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            
+            <TextInput
+              style={styles.input}
+              placeholder="Mot de passe"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+            />
+
+            <TouchableOpacity
+              style={[styles.authButton, loading && styles.disabledButton]}
+              onPress={handleAuth}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.authButtonText}>
+                  {isLogin ? 'Se connecter' : 'S\'inscrire'}
+                </Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => setIsLogin(!isLogin)}
+              style={styles.switchAuthMode}
+            >
+              <Text style={styles.switchAuthText}>
+                {isLogin ? 'Pas de compte ? S\'inscrire' : 'Déjà un compte ? Se connecter'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    );
+  };
+

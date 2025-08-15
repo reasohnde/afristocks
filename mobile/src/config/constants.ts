@@ -1,2 +1,7 @@
-export const API_URL = process.env.API_URL || 'http://localhost:3000';
+// mobile/src/config/constants.ts
+import { Platform } from 'react-native';
+
+const LOCAL_IP = '100.105.207.193';
+export const API_URL = `http://${LOCAL_IP}:5001`;
+
 export const APP_NAME = 'AfriStocks';

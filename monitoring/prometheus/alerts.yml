@@ -1,0 +1,88 @@
+# prometheus/alerts.yml
+groups:
+  - name: node_alerts
+    interval: 30s
+    rules:
+      # CPU élevé
+      - alert: HighCPUUsage
+        expr: 100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CPU usage is high on {{ $labels.instance }}"
+          description: "CPU usage is above 80% (current value: {{ $value }}%)"
+
+      # Mémoire élevée
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Memory usage is high on {{ $labels.instance }}"
+          description: "Memory usage is above 85% (current value: {{ $value }}%)"
+
+      # Espace disque faible
+      - alert: LowDiskSpace
+        expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 15
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Disk space is below 15% (current value: {{ $value }}%)"
+
+  - name: docker_alerts
+    rules:
+      # Container down
+      - alert: ContainerDown
+        expr: up{job="cadvisor"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Container is down"
+          description: "Container {{ $labels.name }} has been down for more than 1 minute"
+
+      # Container CPU élevé
+      - alert: ContainerHighCPU
+        expr: rate(container_cpu_usage_seconds_total[5m]) * 100 > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container CPU usage is high"
+          description: "Container {{ $labels.name }} CPU usage is above 80%"
+
+  - name: application_alerts
+    rules:
+      # Response time élevé
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, http_request_duration_seconds_bucket) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High response time"
+          description: "95th percentile response time is above 500ms"
+
+      # Taux d'erreur élevé
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High error rate"
+          description: "Error rate is above 5%"
+
+      # Service indisponible
+      - alert: ServiceDown
+        expr: up{job="blackbox-http"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service is down"
+          description: "Service {{ $labels.instance }} is not responding"
