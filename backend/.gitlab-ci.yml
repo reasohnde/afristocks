@@ -14,7 +14,7 @@ cache:
     - backend/.npm/
     - backend/node_modules/
 
-.install_backend:
+install_backend:
   stage: install
   script:
     - npm ci
@@ -26,7 +26,7 @@ cache:
 
 build_backend:
   stage: build
-  needs: [".install_backend"]
+  needs: ["install_backend"]
   script:
     - npm run build
   artifacts:
