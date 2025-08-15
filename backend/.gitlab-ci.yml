@@ -14,12 +14,7 @@ cache:
     - backend/.npm/
     - backend/node_modules/
 
-stages:
-  - install
-  - build
-  - test
-
-install:
+.install_backend:
   stage: install
   script:
     - npm ci
@@ -29,9 +24,9 @@ install:
     paths:
       - backend/node_modules/
 
-build:
+build_backend:
   stage: build
-  needs: ["install"]
+  needs: [".install_backend"]
   script:
     - npm run build
   artifacts:
@@ -39,9 +34,9 @@ build:
     paths:
       - backend/dist/
 
-test:
+test_backend:
   stage: test
-  needs: ["build"]
+  needs: ["build_backend"]
   script:
     - npm test -- --ci --watchAll=false || echo "No tests to run"
   allow_failure: true
