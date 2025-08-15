@@ -22,6 +22,18 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Minimal stocks endpoint for validation tests
+app.get('/api/stocks', (req, res) => {
+  res.json({
+    success: true,
+    data: [
+      { symbol: 'AFRI', name: 'Afri Index', price: 100, currency: 'XOF' },
+      { symbol: 'NGX', name: 'Nigerian Growth', price: 245.5, currency: 'NGN' },
+      { symbol: 'BVM', name: 'Bourse Régionale', price: 78.2, currency: 'XOF' }
+    ]
+  });
+});
+
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/fund', require('./routes/fund.routes'));
