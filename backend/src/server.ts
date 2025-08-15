@@ -1,3 +1,9 @@
+
+
+
+#
+
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -236,8 +242,8 @@ io.on('connection', (socket) => {
 // Exporter io pour l'utiliser dans d'autres modules
 export { io };
 
-// Configuration du port
-const PORT = 5001; // Forcer le port 5001
+// Configuration du port (Render fournit PORT)
+const PORT = parseInt(process.env.PORT || '5001');
 const HOST = process.env.HOST || '0.0.0.0'; // 0.0.0.0 permet les connexions externes
 
 
@@ -281,7 +287,7 @@ async function startServer() {
       const os = require('os');
       const networkInterfaces = os.networkInterfaces();
       let localIP = 'localhost';
-      
+
       // Chercher l'IP locale (pas localhost)
       Object.keys(networkInterfaces).forEach((interfaceName) => {
         networkInterfaces[interfaceName].forEach((netInterface: any) => {

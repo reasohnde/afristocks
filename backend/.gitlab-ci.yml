@@ -1,14 +1,18 @@
 image: node:20
 
+default:
+  before_script:
+    - cd backend
+
 variables:
   NODE_ENV: "production"
-  NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.npm"
+  NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/backend/.npm"
 
 cache:
   key: "${CI_COMMIT_REF_SLUG}"
   paths:
-    - .npm/
-    - node_modules/
+    - backend/.npm/
+    - backend/node_modules/
 
 stages:
   - install
@@ -23,7 +27,7 @@ install:
   artifacts:
     expire_in: 1 week
     paths:
-      - node_modules/
+      - backend/node_modules/
 
 build:
   stage: build
@@ -33,7 +37,7 @@ build:
   artifacts:
     expire_in: 1 week
     paths:
-      - dist/
+      - backend/dist/
 
 test:
   stage: test
