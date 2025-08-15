@@ -52,3 +52,12 @@ android/app/build/
 *.sqlite
 *.sqlite3
 postgres-data/
+.vercel
+
+# Backups and duplicates
+mobile-old/
+mobile-backup/
+mobile/*.old
+mobile/**/*.old
+mobile/tsconfig copie.json
+awscliv2.zip
