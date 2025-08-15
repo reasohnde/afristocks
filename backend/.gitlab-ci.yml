@@ -2,15 +2,17 @@ image: node:20
 
 default:
   before_script:
-    - cd backend
+    - if [ -f backend/package.json ]; then cd backend; fi
 
 variables:
   NODE_ENV: "production"
-  NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/backend/.npm"
+  NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.npm"
 
 cache:
   key: "${CI_COMMIT_REF_SLUG}"
   paths:
+    - .npm/
+    - node_modules/
     - backend/.npm/
     - backend/node_modules/
 
@@ -19,20 +21,12 @@ install_backend:
   script:
     - npm ci
     - npx prisma generate
-  artifacts:
-    expire_in: 1 week
-    paths:
-      - backend/node_modules/
 
 build_backend:
   stage: build
   needs: ["install_backend"]
   script:
     - npm run build
-  artifacts:
-    expire_in: 1 week
-    paths:
-      - backend/dist/
 
 test_backend:
   stage: test
