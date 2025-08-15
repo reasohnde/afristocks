@@ -2,8 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
+import { PrismaClient } from '@prisma/client';
 
 const app = express();
+const prisma = new PrismaClient();
 
 app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' }
@@ -12,11 +14,24 @@ app.use(cors());
 app.use(compression());
 app.use(express.json());
 
-app.get('/health', (_req, res) => {
+app.get('/health', async (_req, res) => {
+    let dbStatus: 'connected' | 'disconnected' = 'disconnected';
+    try {
+        if (process.env.DATABASE_URL) {
+            // Simple ping DB
+            // @ts-ignore - template string raw for Prisma
+            await prisma.$queryRaw`SELECT 1`;
+            dbStatus = 'connected';
+        }
+    } catch (e) {
+        dbStatus = 'disconnected';
+    }
+
     res.json({
         status: 'ok',
         timestamp: new Date().toISOString(),
-        message: 'AfriStocks API (TS) is running'
+        message: 'AfriStocks API (TS) is running',
+        services: { database: dbStatus }
     });
 });
 
