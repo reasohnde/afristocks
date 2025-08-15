@@ -1,22 +1,23 @@
 # backend/Dockerfile (mode simplifié pour démarrer server.js)
-FROM node:18-alpine
+FROM node:18-alpine AS builder
 
 WORKDIR /app
+COPY package*.json ./
+COPY tsconfig.json ./
+RUN npm ci
+COPY src ./src
+RUN npm run build
 
-# Installer dépendances prod uniquement
+FROM node:18-alpine AS production
+
+WORKDIR /app
 COPY package*.json ./
 RUN npm ci --only=production
-
-# Copier les fichiers nécessaires au serveur JS
-COPY server.js ./
-COPY routes ./routes
-COPY middleware ./middleware
-COPY model ./model
-# Le dossier config n'est pas nécessaire pour server.js et peut être absent du contexte
+COPY --from=builder /app/dist ./dist
 
 # Port d'écoute
 ENV PORT=5001
 EXPOSE 5001
 
-# Démarrer le serveur Express simple (pas de build TypeScript)
-CMD ["node", "server.js"]
+# Démarrer le serveur TypeScript compilé
+CMD ["node", "dist/index.js"]
