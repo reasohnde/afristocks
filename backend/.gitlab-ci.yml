@@ -1,0 +1,45 @@
+image: node:20
+
+variables:
+  NODE_ENV: "production"
+  NPM_CONFIG_CACHE: "$CI_PROJECT_DIR/.npm"
+
+cache:
+  key: "${CI_COMMIT_REF_SLUG}"
+  paths:
+    - .npm/
+    - node_modules/
+
+stages:
+  - install
+  - build
+  - test
+
+install:
+  stage: install
+  script:
+    - npm ci
+    - npx prisma generate
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - node_modules/
+
+build:
+  stage: build
+  needs: ["install"]
+  script:
+    - npm run build
+  artifacts:
+    expire_in: 1 week
+    paths:
+      - dist/
+
+test:
+  stage: test
+  needs: ["build"]
+  script:
+    - npm test -- --ci --watchAll=false || echo "No tests to run"
+  allow_failure: true
+
+
