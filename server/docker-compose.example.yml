@@ -1,0 +1,21 @@
+version: "3.8"
+
+services:
+  api:
+    image: registry.gitlab.com/<GROUP_PATH>/<PROJECT_NAME>/backend:latest
+    container_name: afristocks-backend
+    restart: unless-stopped
+    env_file:
+      - /srv/afristocks/.env
+    ports:
+      - "<PM_PORT>:<PM_PORT>"
+    # volumes:
+    #   - /srv/afristocks/uploads:/app/uploads
+    # networks:
+    #   - afristocks-net
+
+# networks:
+#   afristocks-net:
+#     driver: bridge
+
+
