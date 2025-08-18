@@ -1,8 +1,6 @@
-// schema.prisma - Configuration complète de la base de données
-
+// prisma/schema.prisma
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["jsonProtocol", "fullTextSearch", "fullTextIndex"]
 }
 
 datasource db {
@@ -10,773 +8,213 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ===== ENUMS =====
+// Enum pour les rôles utilisateur
 enum UserRole {
-  INVESTOR
+  USER
   STARTUP
   ADMIN
 }
 
-enum KYCStatus {
-  PENDING
-  UNDER_REVIEW
-  VERIFIED
-  REJECTED
+// Enum pour les types de transactions
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  INVESTMENT
+  DIVIDEND
+  FEE
+  REFUND
 }
 
-enum OrderType {
-  BUY
-  SELL
-}
-
-enum OrderSubType {
-  MARKET
-  LIMIT
-}
-
-enum OrderStatus {
-  PENDING
-  PARTIALLY_EXECUTED
-  EXECUTED
-  CANCELLED
-  EXPIRED
-}
-
+// Enum pour les statuts de transaction
 enum TransactionStatus {
   PENDING
   COMPLETED
   FAILED
-  REFUNDED
-}
-
-enum PaymentType {
-  DEPOSIT
-  WITHDRAWAL
-}
-
-enum PaymentStatus {
-  PENDING
-  PROCESSING
-  SUCCESS
-  FAILED
   CANCELLED
 }
 
-enum DocumentType {
-  ID_CARD
-  PASSPORT
-  PROOF_OF_ADDRESS
-  SELFIE
-  BANK_STATEMENT
-  TAX_RETURN
-  BUSINESS_LICENSE
+// Enum pour les statuts d'investissement
+enum InvestmentStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
 }
 
-enum NotificationType {
-  TRADE_EXECUTED
-  PAYMENT_RECEIVED
-  KYC_UPDATE
-  SECURITY_ALERT
-  STARTUP_UPDATE
-  SYSTEM_NOTIFICATION
-}
-
-// ===== MODELS =====
-
+// Modèle User principal
 model User {
-  id                String        @id @default(uuid())
-  email             String        @unique
-  phone             String?       @unique
+  id                String    @id @default(uuid())
+  email             String    @unique
   passwordHash      String
-  role              UserRole
-  kycStatus         KYCStatus     @default(PENDING)
-  twoFactorSecret   String?
-  twoFactorEnabled  Boolean       @default(false)
-  isActive          Boolean       @default(true)
-  emailVerified     Boolean       @default(false)
-  phoneVerified     Boolean       @default(false)
-  lastLogin         DateTime?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-
-  // Relations
-  profile           UserProfile?
-  wallet            Wallet?
-  startup           Startup?
-  orders            Order[]
-  transactions      Transaction[] @relation("UserTransactions")
-  portfolios        Portfolio[]
-  payments          Payment[]
-  withdrawals       Withdrawal[]
-  kycDocuments      KYCDocument[]
-  notifications     Notification[]
-  loginAttempts     LoginAttempt[]
-  activityLogs      ActivityLog[]
-  watchlist         Watchlist[]
-  referrals         Referral[]    @relation("Referrer")
-  referredBy        Referral?     @relation("Referred")
-  supportTickets    SupportTicket[]
-
-  @@index([email])
-  @@index([phone])
-  @@index([role, kycStatus])
-}
-
-model UserProfile {
-  id                    String    @id @default(uuid())
-  userId                String    @unique
-  firstName             String
-  lastName              String
-  dateOfBirth           DateTime?
-  nationality           String?
-  idNumber              String?
-  address               String?
-  city                  String?
-  state                 String?
-  country               String?
-  postalCode            String?
-  occupation            String?
-  employerName          String?
-  incomeRange           String?
-  investmentExperience  String?
-  riskTolerance         String?
-  profilePhotoUrl       String?
-  bio                   String?
-  linkedinUrl           String?
-  twitterUrl            String?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-
-  // Relations
-  user                  User      @relation(fields: [userId], references: [id])
-
-  @@index([userId])
-}
-
-model Wallet {
-  id                String              @id @default(uuid())
-  userId            String              @unique
-  balance           Decimal             @default(0) @db.Decimal(20, 2)
-  currency          String              @default("XOF")
-  lockedBalance     Decimal             @default(0) @db.Decimal(20, 2)
-  totalDeposited    Decimal             @default(0) @db.Decimal(20, 2)
-  totalWithdrawn    Decimal             @default(0) @db.Decimal(20, 2)
-  totalEarnings     Decimal             @default(0) @db.Decimal(20, 2)
-  lastActivity      DateTime?
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @updatedAt
-
-  // Relations
-  user              User                @relation(fields: [userId], references: [id])
-  transactions      WalletTransaction[]
-
-  @@index([userId])
-}
-
-model Startup {
-  id                    String            @id @default(uuid())
-  userId                String            @unique
-  companyName           String
-  legalName             String?
-  registrationNumber    String            @unique
-  taxId                 String?
-  country               String
-  headquartersCity      String?
-  sector                String
-  subSector             String?
-  description           String            @db.Text
-  website               String?
-  email                 String?
-  phone                 String?
-  foundedDate           DateTime
-  teamSize              Int
-  valuation             Decimal           @db.Decimal(20, 2)
-  totalShares           Int
-  availableShares       Int
-  sharePrice            Decimal           @db.Decimal(10, 2)
-  minInvestment         Decimal           @db.Decimal(10, 2)
-  maxInvestment         Decimal?          @db.Decimal(10, 2)
-  verified              Boolean           @default(false)
-  verifiedAt            DateTime?
-  verifiedBy            String?
-  featured              Boolean           @default(false)
-  tradingEnabled        Boolean           @default(true)
-  pitchDeckUrl          String?
-  videoUrl              String?
-  businessPlanUrl       String?
-  logoUrl               String?
-  coverImageUrl         String?
-  lastTradePrice        Decimal?          @db.Decimal(10, 2)
-  tradingVolume         Decimal           @default(0) @db.Decimal(20, 2)
-  marketCap             Decimal?          @db.Decimal(20, 2)
-  rating                Decimal?          @db.Decimal(3, 2)
-  totalInvestors        Int               @default(0)
-  totalRaised           Decimal           @default(0) @db.Decimal(20, 2)
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
-
-  // Relations
-  user                  User              @relation(fields: [userId], references: [id])
-  founders              Founder[]
-  financialReports      FinancialReport[]
-  milestones           Milestone[]
-  orders               Order[]
-  portfolios           Portfolio[]
-  watchlists           Watchlist[]
-  updates              StartupUpdate[]
-  documents            StartupDocument[]
-  metrics              StartupMetrics[]
-  fundraisingRounds    FundraisingRound[]
-  reviews              StartupReview[]
-
-  @@index([companyName])
-  @@index([sector])
-  @@index([country])
-  @@index([verified, featured])
-}
-
-model Founder {
-  id                String    @id @default(uuid())
-  startupId         String
   name              String
-  role              String
-  bio               String    @db.Text
-  email             String?
-  linkedinUrl       String?
-  twitterUrl        String?
-  photoUrl          String?
-  sharePercentage   Decimal   @db.Decimal(5, 2)
-  yearsExperience   Int?
-  previousCompanies String[]
-  education         String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
+  phoneNumber       String?   @map("phone_number")
+  kycStatus      String   @default("PENDING") 
+  role              UserRole
+  isActive          Boolean   @default(true)
+  twoFactorEnabled  Boolean   @default(false) @map("two_factor_enabled")
+  twoFactorSecret   String?   @map("two_factor_secret")
+  lastLogin         DateTime? @map("last_login")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+  
   // Relations
-  startup           Startup   @relation(fields: [startupId], references: [id])
-
-  @@index([startupId])
+  wallet         Wallet?
+  investments    Investment[]
+  transactions   Transaction[]
+  loginAttempts  LoginAttempt[]
+  profile        UserProfile?
+  notifications  Notification[]
+  refreshTokens  RefreshToken[]
+  
+  @@map("users")
 }
 
-model FinancialReport {
-  id              String    @id @default(uuid())
-  startupId       String
-  reportType      String    // QUARTERLY, ANNUAL
-  period          String    // e.g., "Q1 2024", "2024"
-  revenue         Decimal   @db.Decimal(20, 2)
-  expenses        Decimal   @db.Decimal(20, 2)
-  netProfit       Decimal   @db.Decimal(20, 2)
-  grossProfit     Decimal   @db.Decimal(20, 2)
-  ebitda          Decimal?  @db.Decimal(20, 2)
-  cashFlow        Decimal?  @db.Decimal(20, 2)
-  burnRate        Decimal?  @db.Decimal(20, 2)
-  runway          Int?      // months
-  customerCount   Int?
-  employeeCount   Int?
-  auditedBy       String?
-  documentUrl     String
-  startDate       DateTime
-  endDate         DateTime
-  publishedAt     DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
-  // Relations
-  startup         Startup   @relation(fields: [startupId], references: [id])
-
-  @@index([startupId, period])
+// Profil utilisateur
+model UserProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique @map("user_id")
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bio             String?
+  avatarUrl       String?  @map("avatar_url")
+  location        String?
+  dateOfBirth     DateTime? @map("date_of_birth")
+  investorType    String?  @map("investor_type")
+  riskProfile     String?  @map("risk_profile")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  
+  @@map("user_profiles")
 }
 
-model Order {
-  id                String        @id @default(uuid())
-  userId            String
-  startupId         String
-  orderType         OrderType
-  orderSubType      OrderSubType
-  sharesQuantity    Int
-  originalQuantity  Int?
-  pricePerShare     Decimal       @db.Decimal(10, 2)
-  totalAmount       Decimal       @db.Decimal(20, 2)
-  feeAmount         Decimal       @db.Decimal(10, 2)
-  status            OrderStatus   @default(PENDING)
-  expiresAt         DateTime?
-  executedAt        DateTime?
-  cancelledAt       DateTime?
-  ipAddress         String?
-  deviceInfo        Json?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-
-  // Relations
-  user              User          @relation(fields: [userId], references: [id])
-  startup           Startup       @relation(fields: [startupId], references: [id])
-  buyTransactions   Transaction[] @relation("BuyOrder")
-  sellTransactions  Transaction[] @relation("SellOrder")
-
-  @@index([userId, status])
-  @@index([startupId, orderType, status])
-  @@index([createdAt])
-}
-
-model Transaction {
-  id                String            @id @default(uuid())
-  buyOrderId        String
-  sellOrderId       String
-  buyerId           String
-  sellerId          String
-  startupId         String
-  sharesQuantity    Int
-  pricePerShare     Decimal           @db.Decimal(10, 2)
-  totalAmount       Decimal           @db.Decimal(20, 2)
-  buyerFee          Decimal           @db.Decimal(10, 2)
-  sellerFee         Decimal           @db.Decimal(10, 2)
-  status            TransactionStatus @default(PENDING)
-  escrowReleaseDate DateTime?
-  completedAt       DateTime?
-  createdAt         DateTime          @default(now())
-  updatedAt         DateTime          @updatedAt
-
-  // Relations
-  buyOrder          Order             @relation("BuyOrder", fields: [buyOrderId], references: [id])
-  sellOrder         Order             @relation("SellOrder", fields: [sellOrderId], references: [id])
-  buyer             User              @relation("UserTransactions", fields: [buyerId], references: [id])
-
-  @@index([buyerId])
-  @@index([sellerId])
-  @@index([startupId])
-  @@index([status])
-}
-
-model Portfolio {
-  id                String    @id @default(uuid())
-  userId            String
-  startupId         String
-  shares            Int
-  lockedShares      Int       @default(0)
-  totalInvested     Decimal   @db.Decimal(20, 2)
-  averagePrice      Decimal   @db.Decimal(10, 2)
-  currentValue      Decimal?  @db.Decimal(20, 2)
-  realizedGains     Decimal   @default(0) @db.Decimal(20, 2)
-  unrealizedGains   Decimal?  @db.Decimal(20, 2)
-  firstPurchaseDate DateTime
-  lastActivity      DateTime
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  // Relations
-  user              User      @relation(fields: [userId], references: [id])
-  startup           Startup   @relation(fields: [startupId], references: [id])
-
-  @@unique([userId, startupId])
+// Tentatives de connexion
+model LoginAttempt {
+  id          String   @id @default(uuid())
+  userId      String?  @map("user_id")
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email       String
+  ipAddress   String   @map("ip_address")
+  userAgent   String?  @map("user_agent")
+  successful  Boolean
+  createdAt DateTime @default(now()) @map("created_at")
+  
   @@index([userId])
-  @@index([startupId])
-}
-
-model Payment {
-  id                String        @id @default(uuid())
-  userId            String
-  type              PaymentType
-  provider          String        // ORANGE_MONEY, MTN_MOMO, WAVE, BANK_TRANSFER
-  amount            Decimal       @db.Decimal(20, 2)
-  currency          String        @default("XOF")
-  fee               Decimal       @default(0) @db.Decimal(10, 2)
-  status            PaymentStatus @default(PENDING)
-  reference         String        @unique
-  externalId        String?
-  phoneNumber       String?
-  bankAccount       String?
-  description       String?
-  metadata          Json?
-  ipAddress         String?
-  failureReason     String?
-  processedAt       DateTime?
-  completedAt       DateTime?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-
-  // Relations
-  user              User          @relation(fields: [userId], references: [id])
-
-  @@index([userId, status])
-  @@index([reference])
-  @@index([externalId])
-}
-
-model Withdrawal {
-  id                String        @id @default(uuid())
-  userId            String
-  amount            Decimal       @db.Decimal(20, 2)
-  fee               Decimal       @db.Decimal(10, 2)
-  netAmount         Decimal       @db.Decimal(20, 2)
-  currency          String        @default("XOF")
-  method            String        // MOBILE_MONEY, BANK_TRANSFER
-  methodDetails     Json
-  status            PaymentStatus @default(PENDING)
-  reference         String        @unique
-  processedBy       String?
-  processedAt       DateTime?
-  completedAt       DateTime?
-  failureReason     String?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-
-  // Relations
-  user              User          @relation(fields: [userId], references: [id])
-
-  @@index([userId, status])
-  @@index([reference])
-}
-
-model KYCDocument {
-  id                String        @id @default(uuid())
-  userId            String
-  documentType      DocumentType
-  documentUrl       String
-  documentHash      String?       // For integrity verification
-  status            String        @default("PENDING") // PENDING, APPROVED, REJECTED
-  verificationNotes String?
-  expiryDate        DateTime?
-  reviewedBy        String?
-  reviewedAt        DateTime?
-  uploadedAt        DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
-
-  // Relations
-  user              User          @relation(fields: [userId], references: [id])
-
-  @@index([userId, documentType])
-  @@index([status])
-}
-
-model Notification {
-  id                String            @id @default(uuid())
-  userId            String
-  type              NotificationType
-  title             String
-  message           String
-  data              Json?
-  priority          String            @default("NORMAL") // LOW, NORMAL, HIGH, URGENT
-  read              Boolean           @default(false)
-  readAt            DateTime?
-  emailSent         Boolean           @default(false)
-  pushSent          Boolean           @default(false)
-  createdAt         DateTime          @default(now())
-
-  // Relations
-  user              User              @relation(fields: [userId], references: [id])
-
-  @@index([userId, read])
-  @@index([type])
+  @@index([email])
   @@index([createdAt])
+  @@map("login_attempts")
 }
 
-model WalletTransaction {
-  id                String    @id @default(uuid())
-  walletId          String
-  type              String    // CREDIT, DEBIT
-  amount            Decimal   @db.Decimal(20, 2)
-  balance           Decimal   @db.Decimal(20, 2)
-  description       String
-  reference         String?
-  relatedType       String?   // ORDER, PAYMENT, WITHDRAWAL, FEE
-  relatedId         String?
-  createdAt         DateTime  @default(now())
+// Tokens de rafraîchissement
+model RefreshToken {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token       String   @unique
+  expiresAt   DateTime @map("expires_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  @@index([userId])
+  @@index([token])
+  @@map("refresh_tokens")
+}
 
-  // Relations
-  wallet            Wallet    @relation(fields: [walletId], references: [id])
+// Portefeuille
+model Wallet {
+  id            String    @id @default(uuid())
+  userId        String    @unique @map("user_id")
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balance       Decimal   @default(0) @db.Decimal(20, 2)
+  lockedBalance Decimal   @default(0) @map("locked_balance") @db.Decimal(20, 2)
+  currency      String    @default("XAF")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  
+  transactions  Transaction[]
+  
+  @@map("wallets")
+}
 
+// Transactions
+model Transaction {
+  id          String              @id @default(uuid())
+  userId      String              @map("user_id")
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  walletId    String              @map("wallet_id")
+  wallet      Wallet              @relation(fields: [walletId], references: [id])
+  type        TransactionType
+  status      TransactionStatus   @default(PENDING)
+  amount      Decimal             @db.Decimal(20, 2)
+  fee         Decimal             @default(0) @db.Decimal(20, 2)
+  description String?
+  reference   String              @unique
+  metadata    Json?
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+  
+  @@index([userId])
   @@index([walletId])
   @@index([type])
-  @@index([createdAt])
+  @@index([status])
+  @@map("transactions")
 }
 
-model LoginAttempt {
-  id                String    @id @default(uuid())
-  userId            String
-  ipAddress         String
-  userAgent         String?
-  success           Boolean
-  failureReason     String?
-  location          Json?     // Geolocation data
-  timestamp         DateTime  @default(now())
-
-  // Relations
-  user              User      @relation(fields: [userId], references: [id])
-
-  @@index([userId, timestamp])
-  @@index([ipAddress])
-}
-
-model ActivityLog {
-  id                String    @id @default(uuid())
-  userId            String
-  action            String
-  entityType        String?
-  entityId          String?
-  oldData           Json?
-  newData           Json?
-  ipAddress         String?
-  userAgent         String?
-  createdAt         DateTime  @default(now())
-
-  // Relations
-  user              User      @relation(fields: [userId], references: [id])
-
-  @@index([userId, createdAt])
-  @@index([entityType, entityId])
-}
-
-model Watchlist {
-  id                String    @id @default(uuid())
-  userId            String
-  startupId         String
-  notes             String?
-  alertsEnabled     Boolean   @default(true)
-  priceAlerts       Json?     // Array of price alert configurations
-  createdAt         DateTime  @default(now())
-
-  // Relations
-  user              User      @relation(fields: [userId], references: [id])
-  startup           Startup   @relation(fields: [startupId], references: [id])
-
-  @@unique([userId, startupId])
+// Investissements
+model Investment {
+  id              String            @id @default(uuid())
+  userId          String            @map("user_id")
+  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startupId       String            @map("startup_id")
+  startup         Startup           @relation(fields: [startupId], references: [id])
+  amount          Decimal           @db.Decimal(20, 2)
+  shares          Int               @default(0)
+  status          InvestmentStatus  @default(ACTIVE)
+  investedAt      DateTime          @default(now()) @map("invested_at")
+  maturityDate    DateTime?         @map("maturity_date")
+  returnAmount    Decimal?          @map("return_amount") @db.Decimal(20, 2)
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+  
   @@index([userId])
   @@index([startupId])
+  @@index([status])
+  @@map("investments")
 }
 
-model StartupUpdate {
-  id                String    @id @default(uuid())
-  startupId         String
-  title             String
-  content           String    @db.Text
-  category          String    // PRODUCT, FINANCIAL, TEAM, MILESTONE, GENERAL
-  attachments       String[]
-  publishedBy       String
-  publishedAt       DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  // Relations
-  startup           Startup   @relation(fields: [startupId], references: [id])
-
-  @@index([startupId, publishedAt])
-  @@index([category])
+// Startups
+model Startup {
+  id              String    @id @default(uuid())
+  name            String
+  description     String
+  logo            String?
+  website         String?
+  pitch           String?
+  valuationTarget Decimal   @map("valuation_target") @db.Decimal(20, 2)
+  raisedAmount    Decimal   @default(0) @map("raised_amount") @db.Decimal(20, 2)
+  minInvestment   Decimal   @map("min_investment") @db.Decimal(20, 2)
+  maxInvestment   Decimal   @map("max_investment") @db.Decimal(20, 2)
+  startDate       DateTime  @map("start_date")
+  endDate         DateTime  @map("end_date")
+  isActive        Boolean   @default(true) @map("is_active")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  
+  investments     Investment[]
+  
+  @@map("startups")
 }
 
-model StartupDocument {
-  id                String    @id @default(uuid())
-  startupId         String
-  title             String
-  description       String?
-  documentType      String    // LEGAL, FINANCIAL, TECHNICAL, MARKETING
-  documentUrl       String
-  isPublic          Boolean   @default(false)
-  uploadedBy        String
-  uploadedAt        DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  // Relations
-  startup           Startup   @relation(fields: [startupId], references: [id])
-
-  @@index([startupId, documentType])
+// Notifications
+model Notification {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  message     String
+  type        String
+  isRead      Boolean   @default(false) @map("is_read")
+  readAt      DateTime? @map("read_at")
+  metadata    Json?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  
+  @@index([userId])
+  @@index([isRead])
+  @@map("notifications")
 }
-
-model StartupMetrics {
-  id                String    @id @default(uuid())
-  startupId         String
-  metricDate        DateTime
-  monthlyRevenue    Decimal?  @db.Decimal(20, 2)
-  monthlyExpenses   Decimal?  @db.Decimal(20, 2)
-  activeUsers       Int?
-  churnRate         Decimal?  @db.Decimal(5, 2)
-  growthRate        Decimal?  @db.Decimal(5, 2)
-  customMetrics     Json?
-  createdAt         DateTime  @default(now())
-
-  // Relations
-  startup           Startup   @relation(fields: [startupId], references: [id])
-
-  @@index([startupId, metricDate])
-}
-
-model Milestone {
-  id                String    @id @default(uuid())
-  startupId         String
-  title             String
-  description       String    @db.Text
-  targetDate        DateTime
-  completedDate     DateTime?
-  status            String    // PLANNED, IN_PROGRESS, COMPLETED, DELAYED
-  category          String    // PRODUCT, REVENUE, USER_GROWTH, FUNDING
-  isPublic          Boolean   @default(true)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  // Relations
-  startup           Startup   @relation(fields: [startupId], references: [id])
-
-  @@index([startupId, status])
-}
-
-model FundraisingRound {
-  id                String    @id @default(uuid())
-  startupId         String
-  roundName         String    // PRE_SEED, SEED, SERIES_A, etc.
-  targetAmount      Decimal   @db.Decimal(20, 2)
-  raisedAmount      Decimal   @default(0) @db.Decimal(20, 2)
-  valuation         Decimal   @db.Decimal(20, 2)
-  sharePrice        Decimal   @db.Decimal(10, 2)
-  totalShares       Int
-  availableShares   Int
-  startDate         DateTime
-  endDate           DateTime?
-  status            String    // PLANNED, ACTIVE, CLOSED, CANCELLED
-  terms             Json?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  // Relations
-  startup           Startup   @relation(fields: [startupId], references: [id])
-
-  @@index([startupId, status])
-}
-
-model StartupReview {
-  id                String    @id @default(uuid())
-  startupId         String
-  userId            String
-  rating            Int       // 1-5
-  review            String?   @db.Text
-  isVerifiedInvestor Boolean  @default(false)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  // Relations
-  startup           Startup   @relation(fields: [startupId], references: [id])
-
-  @@unique([startupId, userId])
-  @@index([startupId, rating])
-}
-
-model Referral {
-  id                String    @id @default(uuid())
-  referrerId        String
-  referredId        String    @unique
-  referralCode      String    @unique
-  status            String    // PENDING, ACTIVE, COMPLETED
-  rewardAmount      Decimal?  @db.Decimal(10, 2)
-  rewardPaid        Boolean   @default(false)
-  completedAt       DateTime?
-  createdAt         DateTime  @default(now())
-
-  // Relations
-  referrer          User      @relation("Referrer", fields: [referrerId], references: [id])
-  referred          User      @relation("Referred", fields: [referredId], references: [id])
-
-  @@index([referrerId])
-  @@index([referralCode])
-}
-
-model SupportTicket {
-  id                String    @id @default(uuid())
-  userId            String
-  subject           String
-  description       String    @db.Text
-  category          String    // ACCOUNT, TRADING, PAYMENT, KYC, TECHNICAL, OTHER
-  priority          String    // LOW, MEDIUM, HIGH, URGENT
-  status            String    // OPEN, IN_PROGRESS, RESOLVED, CLOSED
-  assignedTo        String?
-  resolvedAt        DateTime?
-  satisfaction      Int?      // 1-5
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-
-  // Relations
-  user              User      @relation(fields: [userId], references: [id])
-  messages          TicketMessage[]
-
-  @@index([userId, status])
-  @@index([assignedTo, status])
-}
-
-model TicketMessage {
-  id                String          @id @default(uuid())
-  ticketId          String
-  senderId          String
-  message           String          @db.Text
-  attachments       String[]
-  isInternal        Boolean         @default(false)
-  createdAt         DateTime        @default(now())
-
-  // Relations
-  ticket            SupportTicket   @relation(fields: [ticketId], references: [id])
-
-  @@index([ticketId])
-}
-
-model PlatformSettings {
-  id                String    @id @default(uuid())
-  key               String    @unique
-  value             Json
-  description       String?
-  updatedBy         String?
-  updatedAt         DateTime  @updatedAt
-
-  @@index([key])
-}
-
-model AuditLog {
-  id                String    @id @default(uuid())
-  entityType        String
-  entityId          String
-  action            String
-  performedBy       String
-  performedByRole   String
-  changes           Json
-  ipAddress         String?
-  userAgent         String?
-  timestamp         DateTime  @default(now())
-
-  @@index([entityType, entityId])
-  @@index([performedBy])
-  @@index([timestamp])
-}
-
-model SystemMetrics {
-  id                String    @id @default(uuid())
-  metricDate        DateTime
-  totalUsers        Int
-  activeUsers       Int
-  totalStartups     Int
-  verifiedStartups  Int
-  totalOrders       Int
-  totalVolume       Decimal   @db.Decimal(20, 2)
-  totalFees         Decimal   @db.Decimal(20, 2)
-  newUsers          Int
-  newStartups       Int
-  createdAt         DateTime  @default(now())
-
-  @@unique([metricDate])
-  @@index([metricDate])
-}
-
-// ===== VIEWS (for reporting) =====
-// Note: These would be created as database views for performance
-
-// view UserPortfolioSummary {
-//   userId            String
-//   totalInvested     Decimal
-//   currentValue      Decimal
-//   totalGains        Decimal
-//   numberOfStartups  Int
-//   lastActivity      DateTime
-// }
-
-// view StartupPerformance {
-//   startupId         String
-//   dailyVolume       Decimal
-//   weeklyVolume      Decimal
-//   monthlyVolume     Decimal
-//   priceChange24h    Decimal
-//   priceChange7d     Decimal
-//   priceChange30d    Decimal
-// }

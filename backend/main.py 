@@ -1,0 +1,13 @@
+from app.main import app
+
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/")
+def read_root():
+    return {"message": "Bienvenue sur l'API Afristocks 🎉"}
+
+@app.get("/ping")
+def ping():
+    return {"ping": "pong"}
