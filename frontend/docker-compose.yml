@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: afristocks-db
+    environment:
+      POSTGRES_DB: afristocks
+      POSTGRES_USER: afristocks_user
+      POSTGRES_PASSWORD: securepassword123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - afristocks-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: afristocks-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - afristocks-network
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: afristocks-api
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://afristocks_user:securepassword123@postgres:5432/afristocks
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - afristocks-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: afristocks-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3001:3000"
+    depends_on:
+      - api
+    networks:
+      - afristocks-network
+
+networks:
+  afristocks-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
