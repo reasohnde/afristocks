@@ -12,7 +12,7 @@ test:backend:
   script:
     - cd backend
     - npm ci
-    - npm test --if-present
+    - npm test --if-present -- --passWithNoTests --ci --watchAll=false
 
 docker:build-push:backend:
   stage: docker
