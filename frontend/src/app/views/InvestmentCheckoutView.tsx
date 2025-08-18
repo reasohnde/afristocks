@@ -1,0 +1,573 @@
+// views/InvestmentCheckoutView.tsx
+import React, { useState } from 'react';
+import {
+    ArrowLeft, ArrowRight, CreditCard, Smartphone, Building2,
+    Globe, Check, AlertCircle, Loader, DollarSign
+} from 'lucide-react';
+import { useFund } from '../../contexts/FundContext';
+import { User } from '../../types';
+
+interface InvestmentCheckoutViewProps {
+    checkoutData: any;
+    setActiveView: (view: string) => void;
+    isAuthenticated: boolean;
+    user: User | null;
+}
+
+const InvestmentCheckoutView: React.FC<InvestmentCheckoutViewProps> = ({
+    checkoutData,
+    setActiveView,
+    isAuthenticated,
+    user
+}) => {
+    const { fundData, addInvestment } = useFund();
+    const amount = checkoutData?.amount || 0;
+    const fundId = checkoutData?.fundId || '';
+    const onClose = () => setActiveView('investment-fund');
+    const [currentStep, setCurrentStep] = useState(1);
+    const [isLoading, setIsLoading] = useState(false);
+    const [investmentData, setInvestmentData] = useState({
+        amount: checkoutData?.amount?.toString() || '',
+        paymentMethod: 'card',
+        // Informations personnelles
+        fullName: user?.name || '',
+        email: user?.email || '',
+        phone: '',
+        address: '',
+        city: '',
+        country: 'Côte d\'Ivoire',
+        postalCode: '',
+        // Informations KYC
+        idType: 'passport',
+        idNumber: '',
+        dateOfBirth: '',
+        occupation: '',
+        sourceOfFunds: '',
+        // Termes
+        acceptTerms: false,
+        acceptRisk: false,
+    });
+
+    const paymentMethods = [
+        { id: 'card', name: 'Carte bancaire', icon: CreditCard, fee: '2%', available: true },
+        { id: 'mobile', name: 'Mobile Money', icon: Smartphone, fee: '1%', available: true },
+        { id: 'bank', name: 'Virement bancaire', icon: Building2, fee: '0%', available: true },
+        { id: 'crypto', name: 'Cryptomonnaie', icon: Globe, fee: '1.5%', available: false },
+    ];
+
+    const calculateFees = () => {
+        const amount = parseFloat(investmentData.amount) || 0;
+        switch (investmentData.paymentMethod) {
+            case 'mobile': return amount * 0.01;
+            case 'crypto': return amount * 0.015;
+            case 'card': return amount * 0.02;
+            default: return 0;
+        }
+    };
+
+    const getTotalAmount = () => {
+        const amount = parseFloat(investmentData.amount) || 0;
+        return amount + calculateFees();
+    };
+
+    const validateStep = (step: number) => {
+        switch (step) {
+            case 1:
+                const amount = parseFloat(investmentData.amount);
+                if (!amount || amount < fundData.minInvestment) {
+                    alert(`Le montant minimum est de ${fundData.minInvestment}€`);
+                    return false;
+                }
+                return true;
+
+            case 2:
+                if (!investmentData.fullName || !investmentData.email || !investmentData.phone) {
+                    alert('Veuillez remplir tous les champs obligatoires');
+                    return false;
+                }
+                return true;
+
+            case 3:
+                if (!investmentData.idNumber || !investmentData.dateOfBirth) {
+                    alert('Veuillez compléter vos informations KYC');
+                    return false;
+                }
+                return true;
+
+            case 4:
+                if (!investmentData.paymentMethod) {
+                    alert('Veuillez sélectionner une méthode de paiement');
+                    return false;
+                }
+                return true;
+
+            case 5:
+                if (!investmentData.acceptTerms || !investmentData.acceptRisk) {
+                    alert('Veuillez accepter les conditions');
+                    return false;
+                }
+                return true;
+
+            default:
+                return true;
+        }
+    };
+
+    const handleNextStep = () => {
+        if (validateStep(currentStep)) {
+            if (currentStep < 5) {
+                setCurrentStep(currentStep + 1);
+            } else {
+                processPayment();
+            }
+        }
+    };
+
+    const handlePreviousStep = () => {
+        if (currentStep > 1) {
+            setCurrentStep(currentStep - 1);
+        }
+    };
+
+    const processPayment = async () => {
+        setIsLoading(true);
+        try {
+            // Simulation du paiement
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+
+            // Ajouter l'investissement
+            await addInvestment({
+                userId: user?.id || 'anonymous',
+                userName: investmentData.fullName,
+                userEmail: investmentData.email,
+                amount: parseFloat(investmentData.amount),
+                status: 'completed',
+                paymentMethod: investmentData.paymentMethod,
+            });
+
+            setIsLoading(false);
+            alert('Votre investissement a été confirmé ! Vous recevrez un email de confirmation.');
+            setActiveView('investment-fund');
+        } catch (error) {
+            console.error('Erreur de paiement:', error);
+            setIsLoading(false);
+            alert('Le paiement a échoué. Veuillez réessayer.');
+        }
+    };
+
+    const renderStepIndicator = () => (
+        <div className="flex items-center justify-between mb-8">
+            {[1, 2, 3, 4, 5].map((step) => (
+                <div key={step} className="flex items-center flex-1">
+                    <div
+                        className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${currentStep >= step
+                            ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white'
+                            : 'bg-white/10 text-white/50'
+                            }`}
+                    >
+                        {currentStep > step ? <Check className="w-5 h-5" /> : step}
+                    </div>
+                    {step < 5 && (
+                        <div
+                            className={`flex-1 h-1 mx-2 transition-all ${currentStep > step ? 'bg-emerald-500' : 'bg-white/10'
+                                }`}
+                        />
+                    )}
+                </div>
+            ))}
+        </div>
+    );
+
+    const renderStepContent = () => {
+        switch (currentStep) {
+            case 1:
+                return (
+                    <div className="space-y-6">
+                        <h2 className="text-2xl font-bold text-white">Montant de l'investissement</h2>
+                        <p className="text-white/70">Choisissez le montant que vous souhaitez investir</p>
+
+                        <div className="relative">
+                            <input
+                                type="number"
+                                value={investmentData.amount}
+                                onChange={(e) => setInvestmentData({ ...investmentData, amount: e.target.value })}
+                                placeholder="0"
+                                className="w-full text-5xl font-bold bg-transparent border-b-2 border-white/20 focus:border-emerald-500 outline-none text-white text-center pb-4 transition-all"
+                            />
+                            <span className="absolute right-0 top-0 text-3xl text-white/50">€</span>
+                        </div>
+
+                        <div className="grid grid-cols-4 gap-3">
+                            {[500, 1000, 2500, 5000].map((amount) => (
+                                <button
+                                    key={amount}
+                                    onClick={() => setInvestmentData({ ...investmentData, amount: amount.toString() })}
+                                    className="bg-white/10 hover:bg-white/20 px-4 py-3 rounded-lg text-white font-medium transition-all"
+                                >
+                                    {amount}€
+                                </button>
+                            ))}
+                        </div>
+
+                        {investmentData.amount && parseFloat(investmentData.amount) >= fundData.minInvestment && (
+                            <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 space-y-4">
+                                <div className="flex justify-between">
+                                    <span className="text-white/70">Votre investissement</span>
+                                    <span className="text-white font-semibold">{investmentData.amount}€</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-white/70">Part du fonds</span>
+                                    <span className="text-white font-semibold">
+                                        {((parseFloat(investmentData.amount) / fundData.targetAmount) * 100).toFixed(2)}%
+                                    </span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-white/70">Retour estimé ({fundData.expectedReturn})</span>
+                                    <span className="text-emerald-400 font-semibold">
+                                        {(parseFloat(investmentData.amount) * 1.15).toFixed(0)}€ - {(parseFloat(investmentData.amount) * 1.25).toFixed(0)}€
+                                    </span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
+
+            case 2:
+                return (
+                    <div className="space-y-6">
+                        <h2 className="text-2xl font-bold text-white">Informations personnelles</h2>
+                        <p className="text-white/70">Ces informations sont requises pour la réglementation</p>
+
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm text-white/70 mb-2">Nom complet *</label>
+                                <input
+                                    type="text"
+                                    value={investmentData.fullName}
+                                    onChange={(e) => setInvestmentData({ ...investmentData, fullName: e.target.value })}
+                                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40"
+                                    placeholder="Jean Dupont"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm text-white/70 mb-2">Email *</label>
+                                <input
+                                    type="email"
+                                    value={investmentData.email}
+                                    onChange={(e) => setInvestmentData({ ...investmentData, email: e.target.value })}
+                                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40"
+                                    placeholder="jean@example.com"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm text-white/70 mb-2">Téléphone *</label>
+                                <input
+                                    type="tel"
+                                    value={investmentData.phone}
+                                    onChange={(e) => setInvestmentData({ ...investmentData, phone: e.target.value })}
+                                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40"
+                                    placeholder="+225 0123456789"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm text-white/70 mb-2">Adresse</label>
+                                <input
+                                    type="text"
+                                    value={investmentData.address}
+                                    onChange={(e) => setInvestmentData({ ...investmentData, address: e.target.value })}
+                                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40"
+                                    placeholder="123 Rue Example"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm text-white/70 mb-2">Ville</label>
+                                <input
+                                    type="text"
+                                    value={investmentData.city}
+                                    onChange={(e) => setInvestmentData({ ...investmentData, city: e.target.value })}
+                                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40"
+                                    placeholder="Abidjan"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm text-white/70 mb-2">Code postal</label>
+                                <input
+                                    type="text"
+                                    value={investmentData.postalCode}
+                                    onChange={(e) => setInvestmentData({ ...investmentData, postalCode: e.target.value })}
+                                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40"
+                                    placeholder="00000"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                );
+
+            case 3:
+                return (
+                    <div className="space-y-6">
+                        <h2 className="text-2xl font-bold text-white">Vérification KYC</h2>
+                        <p className="text-white/70">Conformité réglementaire et lutte anti-blanchiment</p>
+
+                        <div>
+                            <label className="block text-sm text-white/70 mb-2">Type de document *</label>
+                            <div className="space-y-3">
+                                {[
+                                    { id: 'passport', label: 'Passeport' },
+                                    { id: 'cni', label: 'Carte d\'identité' },
+                                    { id: 'permit', label: 'Permis de conduire' },
+                                ].map((option) => (
+                                    <label key={option.id} className="flex items-center space-x-3 cursor-pointer">
+                                        <input
+                                            type="radio"
+                                            name="idType"
+                                            value={option.id}
+                                            checked={investmentData.idType === option.id}
+                                            onChange={(e) => setInvestmentData({ ...investmentData, idType: e.target.value })}
+                                            className="w-5 h-5 text-emerald-500 focus:ring-emerald-500"
+                                        />
+                                        <span className="text-white">{option.label}</span>
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm text-white/70 mb-2">Numéro du document *</label>
+                                <input
+                                    type="text"
+                                    value={investmentData.idNumber}
+                                    onChange={(e) => setInvestmentData({ ...investmentData, idNumber: e.target.value })}
+                                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40"
+                                    placeholder="AB123456"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm text-white/70 mb-2">Date de naissance *</label>
+                                <input
+                                    type="date"
+                                    value={investmentData.dateOfBirth}
+                                    onChange={(e) => setInvestmentData({ ...investmentData, dateOfBirth: e.target.value })}
+                                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm text-white/70 mb-2">Profession</label>
+                                <input
+                                    type="text"
+                                    value={investmentData.occupation}
+                                    onChange={(e) => setInvestmentData({ ...investmentData, occupation: e.target.value })}
+                                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40"
+                                    placeholder="Entrepreneur"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm text-white/70 mb-2">Source des fonds</label>
+                                <input
+                                    type="text"
+                                    value={investmentData.sourceOfFunds}
+                                    onChange={(e) => setInvestmentData({ ...investmentData, sourceOfFunds: e.target.value })}
+                                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40"
+                                    placeholder="Épargne personnelle"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                );
+
+            case 4:
+                return (
+                    <div className="space-y-6">
+                        <h2 className="text-2xl font-bold text-white">Méthode de paiement</h2>
+                        <p className="text-white/70">Choisissez comment vous souhaitez payer</p>
+
+                        <div className="space-y-3">
+                            {paymentMethods.map((method) => {
+                                const Icon = method.icon;
+                                return (
+                                    <button
+                                        key={method.id}
+                                        onClick={() => method.available && setInvestmentData({ ...investmentData, paymentMethod: method.id })}
+                                        disabled={!method.available}
+                                        className={`w-full p-4 rounded-xl border-2 transition-all flex items-center justify-between ${investmentData.paymentMethod === method.id
+                                            ? 'bg-emerald-500/20 border-emerald-500'
+                                            : 'bg-white/10 border-white/20 hover:bg-white/15'
+                                            } ${!method.available && 'opacity-50 cursor-not-allowed'}`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <Icon className="w-6 h-6 text-white/80" />
+                                            <div className="text-left">
+                                                <p className="text-white font-medium">{method.name}</p>
+                                                <p className="text-white/60 text-sm">Frais: {method.fee}</p>
+                                            </div>
+                                        </div>
+                                        {!method.available && (
+                                            <span className="text-white/40 text-sm italic">Bientôt</span>
+                                        )}
+                                        {method.available && investmentData.paymentMethod === method.id && (
+                                            <Check className="w-5 h-5 text-emerald-400" />
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6 space-y-4">
+                            <h3 className="text-lg font-semibold text-white mb-4">Récapitulatif</h3>
+                            <div className="flex justify-between">
+                                <span className="text-white/70">Montant investi</span>
+                                <span className="text-white">{investmentData.amount}€</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span className="text-white/70">Frais de transaction</span>
+                                <span className="text-white">{calculateFees().toFixed(2)}€</span>
+                            </div>
+                            <div className="border-t border-white/20 pt-4 flex justify-between">
+                                <span className="text-white font-semibold">Total à payer</span>
+                                <span className="text-2xl font-bold text-emerald-400">{getTotalAmount().toFixed(2)}€</span>
+                            </div>
+                        </div>
+                    </div>
+                );
+
+            case 5:
+                return (
+                    <div className="space-y-6">
+                        <h2 className="text-2xl font-bold text-white">Conditions et confirmation</h2>
+                        <p className="text-white/70">Veuillez lire et accepter les conditions</p>
+
+                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-6 space-y-4">
+                            <div className="flex items-start gap-3">
+                                <AlertCircle className="w-6 h-6 text-amber-400 flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <h4 className="text-lg font-semibold text-white mb-2">Avertissement sur les risques</h4>
+                                    <p className="text-white/70 text-sm leading-relaxed">
+                                        L'investissement dans des startups comporte des risques importants, y compris la perte totale du capital investi.
+                                        Les performances passées ne garantissent pas les résultats futurs.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="space-y-4">
+                            <label className="flex items-start gap-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={investmentData.acceptRisk}
+                                    onChange={(e) => setInvestmentData({ ...investmentData, acceptRisk: e.target.checked })}
+                                    className="w-5 h-5 mt-0.5 text-emerald-500 focus:ring-emerald-500 rounded"
+                                />
+                                <span className="text-white/80">
+                                    Je comprends et accepte les risques liés à cet investissement
+                                </span>
+                            </label>
+
+                            <label className="flex items-start gap-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={investmentData.acceptTerms}
+                                    onChange={(e) => setInvestmentData({ ...investmentData, acceptTerms: e.target.checked })}
+                                    className="w-5 h-5 mt-0.5 text-emerald-500 focus:ring-emerald-500 rounded"
+                                />
+                                <span className="text-white/80">
+                                    J'accepte les conditions générales d'utilisation et la politique de confidentialité
+                                </span>
+                            </label>
+                        </div>
+
+                        <div className="bg-white/10 backdrop-blur-xl rounded-xl p-6">
+                            <h3 className="text-lg font-semibold text-white mb-4">Récapitulatif final</h3>
+                            <div className="space-y-3">
+                                <div className="flex justify-between">
+                                    <span className="text-white/70">Investissement dans</span>
+                                    <span className="text-white font-medium">{fundData.name}</span>
+                                </div>
+                                <div className="flex justify-between items-baseline">
+                                    <span className="text-white/70">Montant total</span>
+                                    <span className="text-3xl font-bold text-emerald-400">{getTotalAmount().toFixed(2)}€</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+
+            default:
+                return null;
+        }
+    };
+
+    return (
+        <div className="min-h-screen">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-8">
+                <button
+                    onClick={() => setActiveView('investment-fund')}
+                    className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
+                >
+                    <ArrowLeft className="w-5 h-5" />
+                    <span>Retour</span>
+                </button>
+                <h1 className="text-xl font-bold text-white">
+                    Investir - Étape {currentStep} sur 5
+                </h1>
+                <div className="w-20" /> {/* Spacer */}
+            </div>
+
+            {/* Progress */}
+            {renderStepIndicator()}
+
+            {/* Content */}
+            <div className="max-w-2xl mx-auto">
+                <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-8 border border-white/20">
+                    {renderStepContent()}
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center justify-between mt-8">
+                    {currentStep > 1 && (
+                        <button
+                            onClick={handlePreviousStep}
+                            className="flex items-center gap-2 bg-white/10 hover:bg-white/20 px-6 py-3 rounded-xl transition-all"
+                        >
+                            <ArrowLeft className="w-5 h-5" />
+                            <span>Retour</span>
+                        </button>
+                    )}
+
+                    <button
+                        onClick={handleNextStep}
+                        disabled={isLoading}
+                        className={`flex items-center gap-2 px-8 py-3 rounded-xl font-semibold transition-all ml-auto ${currentStep === 5
+                            ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white'
+                            : 'bg-white/20 hover:bg-white/30 text-white'
+                            }`}
+                    >
+                        {isLoading ? (
+                            <>
+                                <Loader className="w-5 h-5 animate-spin" />
+                                <span>Traitement...</span>
+                            </>
+                        ) : (
+                            <>
+                                <span>{currentStep === 5 ? 'Confirmer et payer' : 'Continuer'}</span>
+                                {currentStep < 5 && <ArrowRight className="w-5 h-5" />}
+                                {currentStep === 5 && <DollarSign className="w-5 h-5" />}
+                            </>
+                        )}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default InvestmentCheckoutView;

@@ -1,0 +1,1323 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Users, Building2, TrendingUp, FileCheck, DollarSign, Activity,
+  AlertCircle, CheckCircle, Clock, Eye, Shield, BarChart3,
+  Search, Filter, X, UserCheck, UserX, RefreshCw, ArrowLeft,
+  Mail, Phone, Calendar, MapPin, FileText, Download,
+  Settings, Save, Edit2
+} from 'lucide-react';
+import { useFund } from '../../contexts/FundContext';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+
+interface AdminDashboardViewProps {
+  setActiveView: (view: string) => void;
+}
+
+const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ setActiveView }) => {
+  const { fundData, investments, updateFundData, refreshFundData, getTotalInvestors } = useFund();
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [tempValue, setTempValue] = useState<any>('');
+  const [saving, setSaving] = useState(false);
+
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalInvestors: 0,
+    totalStartups: 0,
+    totalAdmins: 0,
+    pendingVerifications: 0,
+    totalInvestments: 0,
+    totalInvestedAmount: 0,
+    totalTransactions: 0,
+    verifiedStartups: 0,
+    usersByRole: {
+      USER: 0,
+      INVESTOR: 0,
+      STARTUP: 0,
+      ADMIN: 0
+    }
+  });
+
+  const [users, setUsers] = useState<any[]>([]);
+  const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('overview');
+  const [kycModal, setKycModal] = useState<{
+    isOpen: boolean;
+    user: any;
+    action: string | null;
+  }>({ isOpen: false, user: null, action: null });
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [userDetails, setUserDetails] = useState<any>(null);
+
+  useEffect(() => {
+    testAdminAPI().then(isAdmin => {
+      if (!isAdmin) {
+        console.error('Admin access check failed');
+      }
+    });
+    fetchDashboardData();
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'users') {
+      fetchUsers();
+    }
+  }, [filter, searchTerm, activeTab]);
+
+  useEffect(() => {
+    if (selectedUser) {
+      fetchUserDetails(selectedUser.id);
+    }
+  }, [selectedUser]);
+
+  const testAdminAPI = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      console.log('Testing admin API with token:', token ? 'Token present' : 'No token');
+
+      // Test 1: Vérifier l'accès admin
+      const testResponse = await fetch(`${API_URL}/api/admin/test`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      console.log('Admin test response:', testResponse.status);
+      const testData = await testResponse.json();
+      console.log('Admin test data:', testData);
+
+      if (!testResponse.ok) {
+        alert('Vous n\'avez pas les droits administrateur. Vérifiez votre rôle.');
+        return false;
+      }
+
+      // Test 2: Vérifier les routes users
+      const usersResponse = await fetch(`${API_URL}/api/admin/users?limit=1`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      console.log('Users test response:', usersResponse.status);
+      const usersData = await usersResponse.json();
+      console.log('Users test data:', usersData);
+
+      return true;
+    } catch (error) {
+      console.error('Admin API test error:', error);
+      return false;
+    }
+  };
+
+  const fetchDashboardData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+
+      // Récupérer les stats
+      const statsResponse = await fetch(`${API_URL}/api/admin/dashboard`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        if (statsData.success) {
+          setStats(statsData.data);
+        }
+      }
+
+      // Récupérer les transactions récentes
+      const transResponse = await fetch(`${API_URL}/api/admin/transactions/recent`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (transResponse.ok) {
+        const transData = await transResponse.json();
+        if (transData.success) {
+          setRecentTransactions(transData.data);
+        }
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Erreur:', error);
+      setLoading(false);
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const params = new URLSearchParams();
+
+      if (filter !== 'all') {
+        params.append('role', filter);
+      }
+
+      if (searchTerm) {
+        params.append('search', searchTerm);
+      }
+
+      const response = await fetch(`${API_URL}/api/admin/users?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          // Enrichir les données avec les infos de base
+          const enrichedData = data.data.map((user: any) => ({
+            ...user,
+            displayRole: user.role === 'STARTUP' ? 'Startup/PME' :
+              user.role === 'INVESTOR' ? 'Investisseur Pro' :
+                user.role === 'ADMIN' ? 'Administrateur' :
+                  'Investisseur Basic'
+          }));
+          setUsers(enrichedData);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
+
+  const fetchUserDetails = async (userId: string) => {
+    try {
+      const token = localStorage.getItem('token');
+
+      // Tentative de récupération des détails complets
+      const response = await fetch(`${API_URL}/api/admin/users/${userId}/details`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          // Enrichir également les détails avec displayRole
+          const enrichedDetails = {
+            ...data.data,
+            displayRole: data.data.role === 'STARTUP' ? 'Startup/PME' :
+              data.data.role === 'INVESTOR' ? 'Investisseur Pro' :
+                data.data.role === 'ADMIN' ? 'Administrateur' :
+                  'Investisseur Basic'
+          };
+          setUserDetails(enrichedDetails);
+          return;
+        }
+      }
+
+      // Si l'endpoint details n'existe pas, essayer de récupérer via l'endpoint users
+      const userResponse = await fetch(`${API_URL}/api/admin/users/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+        if (userData.success) {
+          const enrichedUserData = {
+            ...userData.data,
+            displayRole: userData.data.role === 'STARTUP' ? 'Startup/PME' :
+              userData.data.role === 'INVESTOR' ? 'Investisseur Pro' :
+                userData.data.role === 'ADMIN' ? 'Administrateur' :
+                  'Investisseur Basic'
+          };
+          setUserDetails(enrichedUserData);
+          return;
+        }
+      }
+
+      // En dernier recours, utiliser les données existantes
+      console.log('Utilisation des données existantes pour:', selectedUser);
+      setUserDetails(selectedUser);
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+      // Utiliser les données existantes en cas d'erreur
+      setUserDetails(selectedUser);
+    }
+  };
+
+  const handleKycAction = async (userId: string, action: 'verify' | 'reject', reason?: string) => {
+    try {
+      console.log('KYC Action:', { userId, action, reason });
+
+      const token = localStorage.getItem('token');
+      const endpoint = action === 'verify' ? 'verify-kyc' : 'reject-kyc';
+      const url = `${API_URL}/api/admin/users/${userId}/${endpoint}`;
+
+      const body: any = {};
+      if (action === 'reject' && reason) {
+        body.reason = reason;
+      }
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(body)
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        alert(`KYC ${action === 'verify' ? 'approuvé' : 'rejeté'} avec succès`);
+        fetchUsers();
+        fetchDashboardData();
+        if (selectedUser) {
+          fetchUserDetails(selectedUser.id);
+        }
+      } else {
+        throw new Error(data.message || 'Erreur lors de l\'action KYC');
+      }
+    } catch (error) {
+      console.error('KYC action error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue';
+      alert('Erreur: ' + errorMessage);
+    }
+  };
+
+  const handleToggleUserStatus = async (userId: string) => {
+    try {
+      console.log('Toggling user status for:', userId);
+
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('Vous devez être connecté');
+        return;
+      }
+
+      const user = users.find(u => u.id === userId) || selectedUser;
+      if (!user) return;
+
+      const action = user.isActive ? 'block' : 'unblock';
+      const url = `${API_URL}/api/admin/users/${userId}/${action}`;
+
+      console.log('Request URL:', url);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+      console.log('Response data:', data);
+
+      if (response.ok && data.success) {
+        alert(`Utilisateur ${user.isActive ? 'bloqué' : 'débloqué'} avec succès`);
+        fetchUsers();
+        if (selectedUser) {
+          fetchUserDetails(selectedUser.id);
+        }
+      } else {
+        alert(`Erreur: ${data.message || 'Erreur lors de la modification du statut'}`);
+      }
+    } catch (error) {
+      console.error('Toggle status error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Une erreur est survenue';
+      alert('Erreur lors de la modification du statut: ' + errorMessage);
+    }
+  };
+
+  // Fonctions de gestion du fonds
+  const handleEdit = (field: string, currentValue: any) => {
+    setEditingField(field);
+    setTempValue(currentValue);
+  };
+
+  const handleSave = async () => {
+    if (!editingField) return;
+
+    setSaving(true);
+    try {
+      let value = tempValue;
+
+      // Convertir en nombre si nécessaire
+      if (['targetAmount', 'raisedAmount', 'minInvestment', 'maxInvestment'].includes(editingField)) {
+        value = parseFloat(tempValue) || 0;
+      }
+
+      await updateFundData({ [editingField]: value });
+      setEditingField(null);
+      setTempValue('');
+
+      // Rafraîchir les données
+      await refreshFundData();
+    } catch (error) {
+      console.error('Erreur de sauvegarde:', error);
+      alert('Erreur lors de la sauvegarde');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setEditingField(null);
+    setTempValue('');
+  };
+
+  // Composant Modal pour les actions KYC
+  const KycActionModal = ({ isOpen, onClose, user, action, onConfirm }: {
+    isOpen: boolean;
+    onClose: () => void;
+    user: any;
+    action: string | null;
+    onConfirm: (reason: string) => void;
+  }) => {
+    const [reason, setReason] = useState('');
+
+    if (!isOpen || !user) return null;
+
+    const handleConfirm = () => {
+      if (action === 'reject' && !reason.trim()) {
+        alert('Veuillez fournir une raison pour le rejet');
+        return;
+      }
+      onConfirm(reason);
+      onClose();
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-slate-900 rounded-xl border border-white/20 p-6 max-w-md w-full">
+          <h3 className="text-xl font-semibold text-white mb-4">
+            {action === 'verify' ? 'Approuver KYC' : 'Rejeter KYC'}
+          </h3>
+
+          <div className="mb-4">
+            <p className="text-white/80 mb-2">Utilisateur: <span className="text-white font-medium">{user.name}</span></p>
+            <p className="text-white/80">Email: <span className="text-white font-medium">{user.email}</span></p>
+          </div>
+
+          {action === 'reject' && (
+            <div className="mb-4">
+              <label className="block text-white/80 mb-2">Raison du rejet *</label>
+              <textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-white/40"
+                rows={3}
+                placeholder="Expliquez la raison du rejet..."
+              />
+            </div>
+          )}
+
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all"
+            >
+              Annuler
+            </button>
+            <button
+              onClick={handleConfirm}
+              className={`flex-1 px-4 py-2 rounded-lg transition-all ${action === 'verify'
+                ? 'bg-green-500 hover:bg-green-600 text-white'
+                : 'bg-red-500 hover:bg-red-600 text-white'
+                }`}
+            >
+              {action === 'verify' ? 'Approuver' : 'Rejeter'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Composant pour les cartes de statistiques
+  const StatCard = ({ icon: Icon, title, value, subtitle, color, onClick }: any) => (
+    <div
+      onClick={onClick}
+      className={`relative bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6 
+        ${onClick ? 'cursor-pointer hover:bg-white/15' : ''} transition-all duration-300`}
+    >
+      <div className="flex items-center justify-between mb-4">
+        <div className={`w-12 h-12 rounded-xl bg-${color}-500/20 flex items-center justify-center`}>
+          <Icon className={`w-6 h-6 text-${color}-400`} />
+        </div>
+        {onClick && (
+          <Eye className="w-5 h-5 text-white/40 hover:text-white/60" />
+        )}
+      </div>
+      <h3 className="text-3xl font-bold text-white mb-1">{value}</h3>
+      <p className="text-sm text-white/60">{title}</p>
+      {subtitle && (
+        <p className="text-xs text-white/40 mt-1">{subtitle}</p>
+      )}
+    </div>
+  );
+
+  const TransactionTypeLabel = ({ type }: { type: string }) => {
+    const config: Record<string, { label: string; color: string }> = {
+      DEPOSIT: { label: 'Dépôt', color: 'emerald' },
+      WITHDRAWAL: { label: 'Retrait', color: 'red' },
+      INVESTMENT: { label: 'Investissement', color: 'blue' },
+      DIVIDEND: { label: 'Dividende', color: 'purple' },
+      FEE: { label: 'Frais', color: 'amber' },
+      REFUND: { label: 'Remboursement', color: 'orange' },
+      TRANSFER: { label: 'Transfert', color: 'indigo' }
+    };
+
+    const { label, color } = config[type] || { label: type, color: 'gray' };
+
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs bg-${color}-500/20 text-${color}-400`}>
+        {label}
+      </span>
+    );
+  };
+
+  // Vue détaillée de l'utilisateur
+  const UserDetailView = () => {
+    if (!selectedUser || !userDetails) return null;
+
+    const user = userDetails;
+
+    return (
+      <div className="space-y-6">
+        {/* Header avec bouton retour */}
+        <div className="flex items-center gap-4 mb-6">
+          <button
+            onClick={() => {
+              setSelectedUser(null);
+              setUserDetails(null);
+              setActiveTab('users'); // Retour à l'onglet utilisateurs
+            }}
+            className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all"
+          >
+            <ArrowLeft className="w-5 h-5 text-white" />
+          </button>
+          <div className="flex-1">
+            <h2 className="text-2xl font-bold text-white">Détails de l'utilisateur</h2>
+            <p className="text-white/60">{user.name}</p>
+          </div>
+          {/* Badge du type d'utilisateur */}
+          <div className={`px-4 py-2 rounded-lg ${user.role === 'STARTUP' ? 'bg-emerald-500/20 text-emerald-400' :
+            user.role === 'INVESTOR' ? 'bg-purple-500/20 text-purple-400' :
+              user.role === 'ADMIN' ? 'bg-orange-500/20 text-orange-400' :
+                'bg-blue-500/20 text-blue-400'
+            }`}>
+            <span className="font-medium">
+              {user.role === 'STARTUP' ? '🏢 Startup/PME' :
+                user.role === 'INVESTOR' ? '💰 Investisseur Pro' :
+                  user.role === 'ADMIN' ? '👨‍💼 Administrateur' :
+                    '👤 Investisseur Basic'}
+            </span>
+          </div>
+        </div>
+
+        {/* Actions rapides */}
+        <div className="space-y-4">
+          {/* Statut de certification */}
+          <div className={`p-4 rounded-lg border ${user.kycStatus === 'VERIFIED' ? 'bg-emerald-500/10 border-emerald-500/30' :
+            user.kycStatus === 'PENDING' ? 'bg-amber-500/10 border-amber-500/30' :
+              user.kycStatus === 'REJECTED' ? 'bg-red-500/10 border-red-500/30' :
+                'bg-gray-500/10 border-gray-500/30'
+            }`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-medium text-white mb-1">
+                  Statut de certification : {
+                    user.kycStatus === 'VERIFIED' ? '✅ Certifié' :
+                      user.kycStatus === 'PENDING' ? '⏳ En attente de vérification' :
+                        user.kycStatus === 'REJECTED' ? '❌ Rejeté' :
+                          '⚠️ Non soumis'
+                  }
+                </h4>
+                <p className="text-sm text-white/70">
+                  {user.role === 'STARTUP' ?
+                    'Certification requise pour publier des offres d\'investissement' :
+                    'Certification requise pour investir sur la plateforme'
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Boutons d'action */}
+          <div className="flex gap-3">
+            {user.kycStatus === 'PENDING' && (
+              <>
+                <button
+                  onClick={() => setKycModal({ isOpen: true, user, action: 'verify' })}
+                  className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg flex items-center gap-2 transition-all"
+                >
+                  <UserCheck className="w-5 h-5" />
+                  Approuver KYC
+                </button>
+                <button
+                  onClick={() => setKycModal({ isOpen: true, user, action: 'reject' })}
+                  className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg flex items-center gap-2 transition-all"
+                >
+                  <UserX className="w-5 h-5" />
+                  Rejeter KYC
+                </button>
+              </>
+            )}
+            <button
+              onClick={() => handleToggleUserStatus(user.id)}
+              className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all ${user.isActive
+                ? 'bg-amber-500 hover:bg-amber-600 text-white'
+                : 'bg-green-500 hover:bg-green-600 text-white'
+                }`}
+            >
+              {user.isActive ? <X className="w-5 h-5" /> : <CheckCircle className="w-5 h-5" />}
+              {user.isActive ? 'Bloquer' : 'Débloquer'}
+            </button>
+          </div>
+        </div>
+
+        {/* Informations principales */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Informations personnelles */}
+          <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Informations personnelles</h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <Mail className="w-5 h-5 text-white/40" />
+                <div>
+                  <p className="text-xs text-white/60">Email</p>
+                  <p className="text-white">{user.email}</p>
+                </div>
+              </div>
+              {(user.phoneNumber || user.phone) && (
+                <div className="flex items-center gap-3">
+                  <Phone className="w-5 h-5 text-white/40" />
+                  <div>
+                    <p className="text-xs text-white/60">Téléphone</p>
+                    <p className="text-white">{user.phoneNumber || user.phone}</p>
+                  </div>
+                </div>
+              )}
+              <div className="flex items-center gap-3">
+                <Calendar className="w-5 h-5 text-white/40" />
+                <div>
+                  <p className="text-xs text-white/60">Date d'inscription</p>
+                  <p className="text-white">{new Date(user.created_at || user.createdAt).toLocaleDateString('fr-FR')}</p>
+                </div>
+              </div>
+              {(user.country || user.city) && (
+                <div className="flex items-center gap-3">
+                  <MapPin className="w-5 h-5 text-white/40" />
+                  <div>
+                    <p className="text-xs text-white/60">Localisation</p>
+                    <p className="text-white">
+                      {user.city ? `${user.city}, ` : ''}{user.country || 'Non renseigné'}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Statuts */}
+          <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Statuts</h3>
+            <div className="space-y-3">
+              <div>
+                <p className="text-xs text-white/60 mb-1">Type de compte</p>
+                <span className={`px-3 py-1 text-sm rounded-full ${user.role === 'STARTUP' ? 'bg-emerald-500/20 text-emerald-400' :
+                  user.role === 'INVESTOR' ? 'bg-purple-500/20 text-purple-400' :
+                    user.role === 'ADMIN' ? 'bg-orange-500/20 text-orange-400' :
+                      'bg-blue-500/20 text-blue-400'
+                  }`}>
+                  {user.displayRole || user.role}
+                </span>
+              </div>
+              <div>
+                <p className="text-xs text-white/60 mb-1">Statut KYC</p>
+                <span className={`px-3 py-1 text-sm rounded-full ${user.kycStatus === 'VERIFIED' ? 'bg-green-500/20 text-green-400' :
+                  user.kycStatus === 'PENDING' ? 'bg-amber-500/20 text-amber-400' :
+                    user.kycStatus === 'REJECTED' ? 'bg-red-500/20 text-red-400' :
+                      'bg-gray-500/20 text-gray-400'
+                  }`}>
+                  {user.kycStatus === 'VERIFIED' ? 'Vérifié' :
+                    user.kycStatus === 'PENDING' ? 'En attente' :
+                      user.kycStatus === 'REJECTED' ? 'Rejeté' :
+                        'Non soumis'}
+                </span>
+              </div>
+              <div>
+                <p className="text-xs text-white/60 mb-1">Statut du compte</p>
+                <span className={`px-3 py-1 text-sm rounded-full ${user.isActive ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                  }`}>
+                  {user.isActive ? 'Actif' : 'Bloqué'}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Informations Startup/PME (si applicable) */}
+        {(user.role === 'STARTUP' && (user.startup || user)) && (
+          <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Informations Entreprise</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-white/60">Nom de l'entreprise</p>
+                <p className="text-white font-medium">
+                  {user.startup?.companyName || user.companyName || user.name || 'Non renseigné'}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-white/60">Secteur d'activité</p>
+                <p className="text-white">
+                  {user.startup?.sector || user.sector || 'Non renseigné'}
+                  {(user.startup?.sector || user.sector) && (
+                    <span className="ml-2 text-xs px-2 py-1 bg-white/10 rounded-full">
+                      {(() => {
+                        const sector = user.startup?.sector || user.sector;
+                        const sectorIcons: Record<string, string> = {
+                          fintech: '💳 FinTech',
+                          healthtech: '🏥 HealthTech',
+                          energy: '⚡ Énergie',
+                          ecommerce: '🛒 E-commerce',
+                          edtech: '🎓 EdTech',
+                          logistics: '🚚 Logistique',
+                          agritech: '🌾 AgriTech',
+                          tech: '💻 Tech'
+                        };
+                        return sectorIcons[sector] || sector;
+                      })()}
+                    </span>
+                  )}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-white/60">Pays</p>
+                <p className="text-white">{user.startup?.country || user.country || 'Non renseigné'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-white/60">Ville</p>
+                <p className="text-white">{user.startup?.city || user.city || 'Non renseigné'}</p>
+              </div>
+              {(user.startup?.description || user.description) && (
+                <div className="md:col-span-2">
+                  <p className="text-xs text-white/60">Description</p>
+                  <p className="text-white">{user.startup?.description || user.description}</p>
+                </div>
+              )}
+              {(user.startup?.website || user.website) && (
+                <div>
+                  <p className="text-xs text-white/60">Site web</p>
+                  <a
+                    href={user.startup?.website || user.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-400 hover:underline"
+                  >
+                    {user.startup?.website || user.website}
+                  </a>
+                </div>
+              )}
+              <div>
+                <p className="text-xs text-white/60">Date de création</p>
+                <p className="text-white">
+                  {user.startup?.foundedDate
+                    ? new Date(user.startup.foundedDate).toLocaleDateString('fr-FR')
+                    : 'Non renseigné'}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-white/60">Nombre d'employés</p>
+                <p className="text-white">{user.startup?.teamSize || user.employees || 'Non renseigné'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-white/60">Chiffre d'affaires annuel</p>
+                <p className="text-white">
+                  {user.startup?.revenue
+                    ? `${Number(user.startup.revenue).toLocaleString()} XOF`
+                    : 'Non renseigné'}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-white/60">Numéro d'enregistrement</p>
+                <p className="text-white font-mono">
+                  {user.startup?.registrationNumber || 'Non renseigné'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Informations Investisseur (si applicable) */}
+        {user.role === 'INVESTOR' && (
+          <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Profil Investisseur</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-xs text-white/60">Type d'investisseur</p>
+                <p className="text-white font-medium">Investisseur Professionnel</p>
+              </div>
+              <div>
+                <p className="text-xs text-white/60">Expérience en investissement</p>
+                <p className="text-white">{user.investmentExperience || 'Non renseigné'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-white/60">Montant d'investissement prévu</p>
+                <p className="text-white">{user.investmentBudget ? `${user.investmentBudget.toLocaleString()} XOF` : 'Non renseigné'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-white/60">Secteurs d'intérêt</p>
+                <p className="text-white">{user.interestedSectors?.join(', ') || 'Tous secteurs'}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Documents KYC et Certification */}
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Documents de Certification</h3>
+
+          {/* Documents requis selon le type */}
+          <div className="mb-4 p-4 bg-white/5 rounded-lg">
+            <h4 className="text-sm font-medium text-white mb-2">Documents requis pour {user.role === 'STARTUP' ? 'Startup/PME' : 'Investisseur'}</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+              {user.role === 'STARTUP' ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-white/40" />
+                    <span className="text-white/70">Registre de commerce</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-white/40" />
+                    <span className="text-white/70">Statuts de l'entreprise</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-white/40" />
+                    <span className="text-white/70">Bilans financiers</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-white/40" />
+                    <span className="text-white/70">Pièce d'identité du dirigeant</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-white/40" />
+                    <span className="text-white/70">Pièce d'identité</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-white/40" />
+                    <span className="text-white/70">Justificatif de domicile</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-white/40" />
+                    <span className="text-white/70">Justificatif de revenus</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-white/40" />
+                    <span className="text-white/70">Selfie avec document</span>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Documents soumis */}
+          {user.kycDocuments && user.kycDocuments.length > 0 ? (
+            <div className="space-y-3">
+              {user.kycDocuments.map((doc: any, index: number) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-all">
+                  <div className="flex items-center gap-3">
+                    <FileText className="w-5 h-5 text-white/40" />
+                    <div>
+                      <p className="text-white font-medium">{doc.type || `Document ${index + 1}`}</p>
+                      <p className="text-xs text-white/60">Téléchargé le {new Date(doc.uploadedAt || user.created_at).toLocaleDateString('fr-FR')}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button className="p-2 bg-blue-500/20 hover:bg-blue-500/30 rounded-lg transition-all" title="Visualiser">
+                      <Eye className="w-4 h-4 text-blue-400" />
+                    </button>
+                    <button className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all" title="Télécharger">
+                      <Download className="w-4 h-4 text-white" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-white/40">
+              <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
+              <p className="text-sm">Aucun document soumis</p>
+              {user.kycStatus === 'PENDING' && (
+                <p className="text-xs mt-2 text-amber-400">En attente de soumission des documents</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Historique des transactions */}
+        {user.transactions && user.transactions.length > 0 && (
+          <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Historique des transactions</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-white/10">
+                    <th className="text-left py-3 px-4 text-white/60 text-sm">Type</th>
+                    <th className="text-left py-3 px-4 text-white/60 text-sm">Montant</th>
+                    <th className="text-left py-3 px-4 text-white/60 text-sm">Statut</th>
+                    <th className="text-left py-3 px-4 text-white/60 text-sm">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {user.transactions.map((transaction: any) => (
+                    <tr key={transaction.id} className="border-b border-white/5">
+                      <td className="py-3 px-4">
+                        <TransactionTypeLabel type={transaction.type} />
+                      </td>
+                      <td className="py-3 px-4 text-white">
+                        {Number(transaction.amount).toLocaleString()} XOF
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className={`px-2 py-1 rounded-full text-xs ${transaction.status === 'COMPLETED' ? 'bg-emerald-500/20 text-emerald-400' :
+                          transaction.status === 'PENDING' ? 'bg-amber-500/20 text-amber-400' :
+                            'bg-red-500/20 text-red-400'
+                          }`}>
+                          {transaction.status}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-white/60 text-sm">
+                        {new Date(transaction.createdAt).toLocaleDateString('fr-FR')}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-white">Chargement...</div>
+      </div>
+    );
+  }
+
+  // Si un utilisateur est sélectionné, afficher la vue détaillée
+  if (selectedUser) {
+    return (
+      <>
+        <UserDetailView />
+        {/* Modal KYC (déplacé ici pour être accessible dans la vue détaillée) */}
+        <KycActionModal
+          isOpen={kycModal.isOpen}
+          onClose={() => setKycModal({ isOpen: false, user: null, action: null })}
+          user={kycModal.user}
+          action={kycModal.action}
+          onConfirm={(reason) => {
+            if (kycModal.user && kycModal.action) {
+              handleKycAction(kycModal.user.id, kycModal.action as 'verify' | 'reject', reason);
+            }
+          }}
+        />
+      </>
+    );
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-white mb-2">Tableau de Bord Administrateur</h1>
+          <p className="text-white/60">Vue d'ensemble de la plateforme AfriStocks</p>
+        </div>
+        <button
+          onClick={fetchDashboardData}
+          className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all"
+        >
+          <RefreshCw className="w-5 h-5 text-white" />
+        </button>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-4 border-b border-white/10 pb-4">
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={`px-4 py-2 rounded-lg transition-all ${activeTab === 'overview'
+            ? 'bg-white/20 text-white'
+            : 'text-white/60 hover:text-white'
+            }`}
+        >
+          Vue d'ensemble
+        </button>
+        <button
+          onClick={() => setActiveTab('users')}
+          className={`px-4 py-2 rounded-lg transition-all ${activeTab === 'users'
+            ? 'bg-white/20 text-white'
+            : 'text-white/60 hover:text-white'
+            }`}
+        >
+          Utilisateurs
+        </button>
+        <button
+          onClick={() => setActiveTab('transactions')}
+          className={`px-4 py-2 rounded-lg transition-all ${activeTab === 'transactions'
+            ? 'bg-white/20 text-white'
+            : 'text-white/60 hover:text-white'
+            }`}
+        >
+          Transactions
+        </button>
+      </div>
+
+      {/* Contenu selon l'onglet actif */}
+      {activeTab === 'overview' && (
+        <>
+          {/* Statistiques principales */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <StatCard
+              icon={Users}
+              title="Total Utilisateurs"
+              value={stats.totalUsers}
+              subtitle={`${stats.totalInvestors} investisseurs, ${stats.totalStartups} startups`}
+              color="blue"
+              onClick={() => setActiveTab('users')}
+            />
+            <StatCard
+              icon={Building2}
+              title="Startups"
+              value={stats.totalStartups}
+              subtitle={`${stats.verifiedStartups} vérifiées`}
+              color="emerald"
+              onClick={() => setActiveView('admin-startups')}
+            />
+            <StatCard
+              icon={AlertCircle}
+              title="En attente KYC"
+              value={stats.pendingVerifications}
+              color="amber"
+              onClick={() => {
+                setFilter('all');
+                setActiveTab('users');
+              }}
+            />
+            <StatCard
+              icon={DollarSign}
+              title="Total Investi"
+              value={`${(stats.totalInvestedAmount / 1000000).toFixed(1)}M XOF`}
+              subtitle={`${stats.totalInvestments} investissements`}
+              color="green"
+            />
+          </div>
+
+          {/* Répartition par rôle */}
+          <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6">
+            <h2 className="text-xl font-semibold text-white mb-4">Répartition des Utilisateurs</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-400">{stats.usersByRole.USER}</div>
+                <div className="text-sm text-white/60">Investisseurs Basic</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-400">{stats.usersByRole.INVESTOR}</div>
+                <div className="text-sm text-white/60">Investisseurs Pro</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-emerald-400">{stats.usersByRole.STARTUP}</div>
+                <div className="text-sm text-white/60">Startups</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-400">{stats.usersByRole.ADMIN}</div>
+                <div className="text-sm text-white/60">Administrateurs</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions rapides */}
+          <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6">
+            <h2 className="text-xl font-semibold text-white mb-4">Actions Rapides</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <button
+                onClick={() => setActiveView('admin-startups')}
+                className="p-4 bg-emerald-500/20 hover:bg-emerald-500/30 rounded-xl transition-all duration-300 text-white flex items-center justify-center gap-2"
+              >
+                <CheckCircle className="w-5 h-5" />
+                Valider des Startups
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('users');
+                  setFilter('all');
+                }}
+                className="p-4 bg-amber-500/20 hover:bg-amber-500/30 rounded-xl transition-all duration-300 text-white flex items-center justify-center gap-2"
+              >
+                <Shield className="w-5 h-5" />
+                Vérifier KYC
+              </button>
+              <button
+                onClick={() => setActiveTab('users')}
+                className="p-4 bg-blue-500/20 hover:bg-blue-500/30 rounded-xl transition-all duration-300 text-white flex items-center justify-center gap-2"
+              >
+                <Users className="w-5 h-5" />
+                Gérer Utilisateurs
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {activeTab === 'users' && (
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 overflow-hidden">
+          <div className="p-6 border-b border-white/10">
+            <div className="flex flex-col md:flex-row gap-4 justify-between">
+              <h2 className="text-xl font-semibold text-white">Gestion des Utilisateurs</h2>
+
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/40" />
+                  <input
+                    type="text"
+                    placeholder="Rechercher..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/40 focus:outline-none focus:border-white/40"
+                  />
+                </div>
+
+                <select
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                  className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-white/40"
+                >
+                  <option value="all">Tous les utilisateurs</option>
+                  <option value="USER">Investisseurs Basic</option>
+                  <option value="INVESTOR">Investisseurs Pro</option>
+                  <option value="STARTUP">Startups</option>
+                  <option value="ADMIN">Administrateurs</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-white/5">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
+                    Utilisateur
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
+                    Type
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
+                    Statut KYC
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
+                    Statut
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
+                    Date d'inscription
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/60 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/10">
+                {users.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-4 text-center text-white/60">
+                      Aucun utilisateur trouvé
+                    </td>
+                  </tr>
+                ) : (
+                  users.map((user) => (
+                    <tr
+                      key={user.id}
+                      className="hover:bg-white/5 cursor-pointer"
+                      onClick={() => setSelectedUser(user)}
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-white">{user.name}</div>
+                          <div className="text-sm text-white/60">{user.email}</div>
+                          {user.role === 'STARTUP' && (
+                            <div className="text-xs text-emerald-400 mt-1">
+                              {user.companyName || user.startup?.companyName || 'Entreprise'} - {user.sector || user.startup?.sector || 'Secteur'}
+                            </div>
+                          )}
+                          {user.role === 'INVESTOR' && (
+                            <div className="text-xs text-purple-400 mt-1">
+                              Investisseur professionnel
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 text-xs rounded-full ${user.role === 'STARTUP' ? 'bg-emerald-500/20 text-emerald-400' :
+                          user.role === 'INVESTOR' ? 'bg-purple-500/20 text-purple-400' :
+                            user.role === 'ADMIN' ? 'bg-orange-500/20 text-orange-400' :
+                              'bg-blue-500/20 text-blue-400'
+                          }`}>
+                          {user.displayRole}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 text-xs rounded-full ${user.kycStatus === 'VERIFIED' ? 'bg-green-500/20 text-green-400' :
+                          user.kycStatus === 'PENDING' ? 'bg-amber-500/20 text-amber-400' :
+                            user.kycStatus === 'REJECTED' ? 'bg-red-500/20 text-red-400' :
+                              'bg-gray-500/20 text-gray-400'
+                          }`}>
+                          {user.kycStatus === 'VERIFIED' ? 'Vérifié' :
+                            user.kycStatus === 'PENDING' ? 'En attente' :
+                              user.kycStatus === 'REJECTED' ? 'Rejeté' :
+                                'Non soumis'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-2 py-1 text-xs rounded-full ${user.isActive ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                          }`}>
+                          {user.isActive ? 'Actif' : 'Bloqué'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white/60">
+                        {new Date(user.created_at).toLocaleDateString('fr-FR')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        <div className="flex items-center gap-2">
+                          {user.kycStatus === 'PENDING' && (
+                            <>
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setKycModal({ isOpen: true, user, action: 'verify' });
+                                }}
+                                className="p-1 text-green-400 hover:text-green-300 hover:bg-green-400/20 rounded transition-all"
+                                title="Approuver KYC"
+                              >
+                                <UserCheck className="w-5 h-5" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setKycModal({ isOpen: true, user, action: 'reject' });
+                                }}
+                                className="p-1 text-red-400 hover:text-red-300 hover:bg-red-400/20 rounded transition-all"
+                                title="Rejeter KYC"
+                              >
+                                <UserX className="w-5 h-5" />
+                              </button>
+                            </>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              console.log('Toggling status for:', user.id, user.name);
+                              handleToggleUserStatus(user.id);
+                            }}
+                            className={`p-1 rounded transition-all ${user.isActive
+                              ? 'text-amber-400 hover:text-amber-300 hover:bg-amber-400/20'
+                              : 'text-green-400 hover:text-green-300 hover:bg-green-400/20'
+                              }`}
+                            title={user.isActive ? 'Bloquer' : 'Débloquer'}
+                          >
+                            {user.isActive ? <X className="w-5 h-5" /> : <CheckCircle className="w-5 h-5" />}
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setSelectedUser(user);
+                            }}
+                            className="p-1 text-white/60 hover:text-white hover:bg-white/10 rounded transition-all"
+                            title="Voir détails"
+                          >
+                            <Eye className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'transactions' && (
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl border border-white/20 p-6">
+          <h2 className="text-xl font-semibold text-white mb-4">Transactions Récentes</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-white/10">
+                  <th className="text-left py-3 px-4 text-white/60 text-sm">Utilisateur</th>
+                  <th className="text-left py-3 px-4 text-white/60 text-sm">Type</th>
+                  <th className="text-left py-3 px-4 text-white/60 text-sm">Montant</th>
+                  <th className="text-left py-3 px-4 text-white/60 text-sm">Statut</th>
+                  <th className="text-left py-3 px-4 text-white/60 text-sm">Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentTransactions.map((transaction) => (
+                  <tr key={transaction.id} className="border-b border-white/5 hover:bg-white/5">
+                    <td className="py-3 px-4">
+                      <div className="text-white">
+                        {transaction.user?.name || 'N/A'}
+                      </div>
+                      <div className="text-xs text-white/40">
+                        {transaction.user?.email}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <TransactionTypeLabel type={transaction.type} />
+                    </td>
+                    <td className="py-3 px-4 text-white">
+                      {Number(transaction.amount).toLocaleString()} XOF
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className={`px-2 py-1 rounded-full text-xs ${transaction.status === 'COMPLETED' ? 'bg-emerald-500/20 text-emerald-400' :
+                        transaction.status === 'PENDING' ? 'bg-amber-500/20 text-amber-400' :
+                          transaction.status === 'FAILED' ? 'bg-red-500/20 text-red-400' :
+                            'bg-gray-500/20 text-gray-400'
+                        }`}>
+                        {transaction.status === 'COMPLETED' ? 'Complété' :
+                          transaction.status === 'PENDING' ? 'En attente' :
+                            transaction.status === 'FAILED' ? 'Échoué' :
+                              'Annulé'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-white/60 text-sm">
+                      {new Date(transaction.createdAt).toLocaleDateString('fr-FR')}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AdminDashboardView;
