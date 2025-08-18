@@ -58,8 +58,13 @@ deploy:prod:backend:
     - eval "$(ssh-agent -s)"
     - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
     - mkdir -p ~/.ssh && chmod 700 ~/.ssh
-    - ssh-keyscan -H "$REMOTE_HOST" >> ~/.ssh/known_hosts
+    - |
+      : "${REMOTE_HOST:=${IP_ADRESS:-}}"  # fallback to IP_ADRESS if REMOTE_HOST unset
+      : "${REMOTE_USER:=${SSH_USER:-root}}"  # fallback to SSH_USER or root
+      if [ -z "$REMOTE_HOST" ]; then echo "REMOTE_HOST/IP_ADRESS manquant" && exit 1; fi
+      ssh-keyscan -H "$REMOTE_HOST" >> ~/.ssh/known_hosts
   script:
     - bash .gitlab/ci/scripts/deploy_backend.sh
+
 
 
