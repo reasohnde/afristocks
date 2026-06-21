@@ -1,0 +1,39 @@
+# Image de PRODUCTION du backend AfriStocks — multi-stage, non-root.
+# (Le Dockerfile de dev et docker-compose restent inchangés.)
+# Build :  docker build -f Dockerfile.prod -t afristocks-backend:prod .
+# Run   :  docker run --env-file .env.production -p 3000:3000 afristocks-backend:prod
+
+# --- Stage 1 : compilation ---
+FROM node:20-alpine AS builder
+WORKDIR /app
+
+# Dépendances (toutes, dev incluses, pour compiler)
+COPY package*.json ./
+RUN npm ci
+
+# Client Prisma + compilation TypeScript -> dist/
+COPY prisma ./prisma/
+RUN npx prisma generate
+COPY tsconfig.json ./
+COPY src ./src/
+RUN npm run build
+
+# --- Stage 2 : exécution ---
+FROM node:20-alpine AS runner
+ENV NODE_ENV=production
+WORKDIR /app
+
+# Reprend les dépendances + le client Prisma généré, puis élague les devDependencies
+COPY package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+RUN npm prune --omit=dev
+
+# Artefacts de build et schéma Prisma
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
+
+# Exécution sans privilèges (l'image node fournit déjà l'utilisateur 'node')
+USER node
+
+EXPOSE 3000
+CMD ["node", "dist/server.js"]
