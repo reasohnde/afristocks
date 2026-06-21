@@ -8,9 +8,10 @@ import {
   UserCircle, Mail, Phone, MapPin, Facebook, Twitter, Linkedin, Instagram, Youtube,
   Heart, BookOpen, HeadphonesIcon, CreditCard, Award,
   Edit3, Camera, FileCheck, Eye, Plus, Upload, Download, GlobeIcon,
-  Cpu, Leaf, Truck, GraduationCap, ShoppingCart, Construction, ArrowLeft
+  Cpu, Leaf, Truck, GraduationCap, ShoppingCart, Construction, ArrowLeft, Sun, Moon
 } from 'lucide-react';
 import Cookies from 'js-cookie';
+import { useTheme } from './providers/ThemeProvider';
 
 // Import du contexte Fund
 import { FundProvider } from '../contexts/FundContext';
@@ -706,45 +707,50 @@ const AfriStocksApp = () => {
 
   // En-tête clair (style IBKR) affiché une fois connecté
   const AppHeaderLight = () => {
+    const { theme, toggle } = useTheme();
     const navItems: [string, string][] = [
       ['home', 'Accueil'], ['startups', 'Startups'], ['portfolio', 'Portfolio'],
       ['trading', 'Trading'], ['actualites', 'Actualités'], ['formations', 'Formations'], ['faq', 'FAQ'],
     ];
+    const navCls = (active: boolean) =>
+      `relative px-3 py-2 text-sm font-medium transition-colors ${active ? 'text-blue-600 dark:text-blue-400' : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'}`;
     return (
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white dark:bg-[#0f141c] border-b border-slate-200 dark:border-slate-800 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-8">
               <div className="flex items-center cursor-pointer" onClick={() => setActiveView('home')}>
-                <TrendingUp className="w-7 h-7 text-blue-700" />
-                <span className="ml-2 text-lg font-bold text-slate-900">AfriStocks</span>
+                <TrendingUp className="w-7 h-7 text-blue-600" />
+                <span className="ml-2 text-lg font-bold text-slate-900 dark:text-slate-100">AfriStocks</span>
               </div>
               <nav className="hidden lg:flex items-center gap-1">
                 {navItems.map(([view, label]) => (
-                  <button key={view} onClick={() => setActiveView(view)}
-                    className={`relative px-3 py-2 text-sm font-medium transition-colors ${activeView === view ? 'text-blue-700' : 'text-slate-600 hover:text-slate-900'}`}>
+                  <button key={view} onClick={() => setActiveView(view)} className={navCls(activeView === view)}>
                     {label}
-                    {activeView === view && <span className="absolute -bottom-px left-2 right-2 h-0.5 bg-blue-700 rounded-full" />}
+                    {activeView === view && <span className="absolute -bottom-px left-2 right-2 h-0.5 bg-blue-600 dark:bg-blue-400 rounded-full" />}
                   </button>
                 ))}
                 {user?.role === 'ADMIN' && (
-                  <button onClick={() => setActiveView('admin-dashboard')}
-                    className={`px-3 py-2 text-sm font-medium transition-colors ${activeView.startsWith('admin') ? 'text-blue-700' : 'text-slate-600 hover:text-slate-900'}`}>
+                  <button onClick={() => setActiveView('admin-dashboard')} className={navCls(activeView.startsWith('admin'))}>
                     Administration
                   </button>
                 )}
               </nav>
             </div>
             <div className="flex items-center gap-3">
+              <button onClick={toggle} aria-label="Basculer le thème clair/sombre"
+                className="p-2 rounded-md text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
               <div className="hidden sm:block text-right leading-tight">
-                <div className="text-sm font-semibold text-slate-900">{user?.name || 'Compte'}</div>
-                <div className="text-xs text-slate-500">{user?.verified ? 'Vérifié' : 'Non vérifié'}</div>
+                <div className="text-sm font-semibold text-slate-900 dark:text-slate-100">{user?.name || 'Compte'}</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">{user?.verified ? 'Vérifié' : 'Non vérifié'}</div>
               </div>
               <button onClick={handleLogout}
-                className="px-3 py-1.5 text-sm rounded-md border border-slate-300 text-slate-700 hover:bg-slate-100 transition-colors">
+                className="px-3 py-1.5 text-sm rounded-md border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
                 Déconnexion
               </button>
-              <div className="w-9 h-9 rounded-full bg-blue-700 text-white flex items-center justify-center text-sm font-semibold">
+              <div className="w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold">
                 {(user?.name || 'U').slice(0, 2).toUpperCase()}
               </div>
             </div>
@@ -978,16 +984,16 @@ const AfriStocksApp = () => {
 
   // Footer clair minimal (affiché dans l'espace connecté)
   const AppFooterLight = () => (
-    <footer className="bg-white border-t border-slate-200 mt-16">
+    <footer className="bg-white dark:bg-[#0f141c] border-t border-slate-200 dark:border-slate-800 mt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-blue-700" />
-          <span className="text-sm font-semibold text-slate-800">AfriStocks</span>
+          <TrendingUp className="w-5 h-5 text-blue-600" />
+          <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">AfriStocks</span>
         </div>
-        <p className="text-xs text-slate-400 text-center">© 2026 AfriStocks · Investir comporte des risques de perte en capital.</p>
-        <div className="flex items-center gap-4 text-xs text-slate-500">
-          <button onClick={() => setActiveView('faq')} className="hover:text-slate-800 transition-colors">FAQ</button>
-          <button onClick={() => setActiveView('formations')} className="hover:text-slate-800 transition-colors">Formations</button>
+        <p className="text-xs text-slate-400 dark:text-slate-500 text-center">© 2026 AfriStocks · Investir comporte des risques de perte en capital.</p>
+        <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
+          <button onClick={() => setActiveView('faq')} className="hover:text-slate-800 dark:hover:text-slate-200 transition-colors">FAQ</button>
+          <button onClick={() => setActiveView('formations')} className="hover:text-slate-800 dark:hover:text-slate-200 transition-colors">Formations</button>
         </div>
       </div>
     </footer>
@@ -1411,7 +1417,7 @@ const AfriStocksApp = () => {
 
   return (
     <FundProvider>
-      <div className={`min-h-screen relative overflow-hidden ${isAuthenticated ? 'bg-[#f4f5f7]' : 'bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950'}`}>
+      <div className={`min-h-screen relative overflow-hidden ${isAuthenticated ? 'bg-[#f4f5f7] dark:bg-[#0b0f17]' : 'bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950'}`}>
         {/* Fond décoratif uniquement sur les pages publiques (avant connexion) */}
         {!isAuthenticated && (
           <div className="fixed inset-0 pointer-events-none">

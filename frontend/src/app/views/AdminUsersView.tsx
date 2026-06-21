@@ -97,12 +97,12 @@ const AdminUsersView: React.FC<AdminUsersViewProps> = ({ setActiveView }) => {
 
   const kycBadge = (status: KycStatus) => {
     const map: Record<string, { label: string; cls: string }> = {
-      APPROVED: { label: 'Approuvé', cls: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
-      PENDING: { label: 'En attente', cls: 'text-amber-700 bg-amber-50 border-amber-200' },
-      REJECTED: { label: 'Rejeté', cls: 'text-red-700 bg-red-50 border-red-200' },
-      NOT_SUBMITTED: { label: 'Non soumis', cls: 'text-slate-600 bg-slate-50 border-slate-200' },
+      APPROVED: { label: 'Approuvé', cls: 'text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/30' },
+      PENDING: { label: 'En attente', cls: 'text-amber-700 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/30' },
+      REJECTED: { label: 'Rejeté', cls: 'text-red-700 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-500/10 dark:border-red-500/30' },
+      NOT_SUBMITTED: { label: 'Non soumis', cls: 'text-slate-600 bg-slate-50 border-slate-200 dark:text-slate-300 dark:bg-slate-800/50 dark:border-slate-800' },
     };
-    const cfg = map[status] || { label: String(status), cls: 'text-slate-600 bg-slate-50 border-slate-200' };
+    const cfg = map[status] || { label: String(status), cls: 'text-slate-600 bg-slate-50 border-slate-200 dark:text-slate-300 dark:bg-slate-800/50 dark:border-slate-800' };
     return (
       <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium border ${cfg.cls}`}>
         {cfg.label}
@@ -115,12 +115,12 @@ const AdminUsersView: React.FC<AdminUsersViewProps> = ({ setActiveView }) => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Gestion des utilisateurs</h1>
-          <p className="text-sm text-slate-500 mt-1">Gérez les comptes, le KYC et l'accès à la plateforme</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Gestion des utilisateurs</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Gérez les comptes, le KYC et l'accès à la plateforme</p>
         </div>
         <button
           onClick={() => setActiveView('admin-dashboard')}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-md text-sm"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-[#0f141c] border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded-md text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
           Retour au dashboard
@@ -128,23 +128,23 @@ const AdminUsersView: React.FC<AdminUsersViewProps> = ({ setActiveView }) => {
       </div>
 
       {/* Filtres */}
-      <div className="bg-white border border-slate-200 rounded-lg shadow-sm p-4">
+      <div className="bg-white dark:bg-[#0f141c] border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm p-4">
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative flex-1 min-w-[260px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Rechercher par nom ou email..."
-              className="w-full pl-9 pr-3 py-2 bg-white border border-slate-300 rounded-md text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+              className="w-full pl-9 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
             />
           </div>
 
           <select
             value={kycFilter}
             onChange={(e) => setKycFilter(e.target.value)}
-            className="px-3 py-2 bg-white border border-slate-300 rounded-md text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
+            className="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-600"
           >
             <option value="all">Tous les statuts KYC</option>
             <option value="NOT_SUBMITTED">Non soumis</option>
@@ -155,7 +155,7 @@ const AdminUsersView: React.FC<AdminUsersViewProps> = ({ setActiveView }) => {
 
           <button
             onClick={fetchUsers}
-            className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-md text-sm"
+            className="inline-flex items-center gap-2 px-3 py-2 bg-white dark:bg-[#0f141c] border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded-md text-sm"
           >
             <RefreshCw className="w-4 h-4" />
             Actualiser
@@ -164,49 +164,49 @@ const AdminUsersView: React.FC<AdminUsersViewProps> = ({ setActiveView }) => {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-md px-4 py-3 text-sm">
+        <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-400 rounded-md px-4 py-3 text-sm">
           {error}
         </div>
       )}
 
       {/* Tableau */}
-      <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-[#0f141c] border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-6 space-y-3">
             {[1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-10 bg-slate-100 rounded animate-pulse" />
+              <div key={i} className="h-10 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
             ))}
           </div>
         ) : filteredUsers.length === 0 ? (
           <div className="text-center py-16">
-            <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <p className="text-sm text-slate-500">Aucun utilisateur trouvé</p>
+            <Users className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+            <p className="text-sm text-slate-500 dark:text-slate-400">Aucun utilisateur trouvé</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50">
+              <thead className="bg-slate-50 dark:bg-slate-800/50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Email</th>
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Nom</th>
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Téléphone</th>
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Rôle</th>
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">KYC</th>
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Statut</th>
-                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wide text-slate-500 font-medium">Inscrit le</th>
-                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wide text-slate-500 font-medium">Actions</th>
+                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-medium">Email</th>
+                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-medium">Nom</th>
+                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-medium">Téléphone</th>
+                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-medium">Rôle</th>
+                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-medium">KYC</th>
+                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-medium">Statut</th>
+                  <th className="px-4 py-3 text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-medium">Inscrit le</th>
+                  <th className="px-4 py-3 text-right text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredUsers.map((user) => {
                   const busy = actionId === user.id;
                   return (
-                    <tr key={user.id} className="border-t border-slate-100 hover:bg-slate-50">
-                      <td className="px-4 py-3 text-slate-900">{user.email}</td>
-                      <td className="px-4 py-3 text-slate-700">{fullName(user)}</td>
-                      <td className="px-4 py-3 text-slate-600 tabular-nums">{user.phoneNumber || '—'}</td>
+                    <tr key={user.id} className="border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                      <td className="px-4 py-3 text-slate-900 dark:text-slate-100">{user.email}</td>
+                      <td className="px-4 py-3 text-slate-700 dark:text-slate-200">{fullName(user)}</td>
+                      <td className="px-4 py-3 text-slate-600 dark:text-slate-300 tabular-nums">{user.phoneNumber || '—'}</td>
                       <td className="px-4 py-3">
-                        <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium border text-slate-600 bg-slate-50 border-slate-200">
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium border text-slate-600 bg-slate-50 border-slate-200 dark:text-slate-300 dark:bg-slate-800/50 dark:border-slate-800">
                           {user.role}
                         </span>
                       </td>
@@ -215,14 +215,14 @@ const AdminUsersView: React.FC<AdminUsersViewProps> = ({ setActiveView }) => {
                         <span
                           className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium border ${
                             user.isActive
-                              ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
-                              : 'text-slate-600 bg-slate-50 border-slate-200'
+                              ? 'text-emerald-700 bg-emerald-50 border-emerald-200 dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/30'
+                              : 'text-slate-600 bg-slate-50 border-slate-200 dark:text-slate-300 dark:bg-slate-800/50 dark:border-slate-800'
                           }`}
                         >
                           {user.isActive ? 'Actif' : 'Inactif'}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-slate-500 tabular-nums">
+                      <td className="px-4 py-3 text-slate-500 dark:text-slate-400 tabular-nums">
                         {new Date(user.createdAt).toLocaleDateString('fr-FR')}
                       </td>
                       <td className="px-4 py-3">
@@ -233,7 +233,7 @@ const AdminUsersView: React.FC<AdminUsersViewProps> = ({ setActiveView }) => {
                                 onClick={() => handleVerifyKyc(user.id)}
                                 disabled={busy}
                                 title="Valider le KYC"
-                                className="p-1.5 rounded-md text-emerald-700 hover:bg-emerald-50 disabled:opacity-50"
+                                className="p-1.5 rounded-md text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 disabled:opacity-50"
                               >
                                 <CheckCircle className="w-4 h-4" />
                               </button>
@@ -241,7 +241,7 @@ const AdminUsersView: React.FC<AdminUsersViewProps> = ({ setActiveView }) => {
                                 onClick={() => handleRejectKyc(user.id)}
                                 disabled={busy}
                                 title="Rejeter le KYC"
-                                className="p-1.5 rounded-md text-red-700 hover:bg-red-50 disabled:opacity-50"
+                                className="p-1.5 rounded-md text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-50"
                               >
                                 <XCircle className="w-4 h-4" />
                               </button>
@@ -253,8 +253,8 @@ const AdminUsersView: React.FC<AdminUsersViewProps> = ({ setActiveView }) => {
                             title={user.isActive ? 'Désactiver le compte' : 'Activer le compte'}
                             className={`p-1.5 rounded-md disabled:opacity-50 ${
                               user.isActive
-                                ? 'text-red-700 hover:bg-red-50'
-                                : 'text-emerald-700 hover:bg-emerald-50'
+                                ? 'text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10'
+                                : 'text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10'
                             }`}
                           >
                             {user.isActive ? <Ban className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}

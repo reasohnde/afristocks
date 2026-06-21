@@ -201,13 +201,13 @@ const AdminNewsView: React.FC<AdminNewsViewProps> = ({ setActiveView }) => {
     const importanceBadge = (importance: News['importance']) => {
         switch (importance) {
             case 'URGENT':
-                return 'text-red-700 bg-red-50 border border-red-200';
+                return 'text-red-700 bg-red-50 border border-red-200 dark:text-red-400 dark:bg-red-500/10 dark:border-red-500/30';
             case 'HIGH':
-                return 'text-amber-700 bg-amber-50 border border-amber-200';
+                return 'text-amber-700 bg-amber-50 border border-amber-200 dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/30';
             case 'NORMAL':
-                return 'text-blue-700 bg-blue-50 border border-blue-200';
+                return 'text-blue-700 bg-blue-50 border border-blue-200 dark:text-blue-400 dark:bg-blue-500/10 dark:border-blue-500/30';
             default:
-                return 'text-slate-600 bg-slate-50 border border-slate-200';
+                return 'text-slate-600 bg-slate-50 border border-slate-200 dark:text-slate-300 dark:bg-slate-800/50 dark:border-slate-800';
         }
     };
 
@@ -225,19 +225,19 @@ const AdminNewsView: React.FC<AdminNewsViewProps> = ({ setActiveView }) => {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900">Gestion des Actualités</h1>
-                    <p className="text-slate-500 mt-1 text-sm">Créez et gérez les actualités de la plateforme</p>
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Gestion des Actualités</h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">Créez et gérez les actualités de la plateforme</p>
                 </div>
                 <button
                     onClick={() => setActiveView('admin-dashboard')}
-                    className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-md text-sm font-medium transition-colors"
+                    className="px-4 py-2 bg-white dark:bg-[#0f141c] border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded-md text-sm font-medium transition-colors"
                 >
                     Retour au dashboard
                 </button>
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-2 border-b border-slate-200">
+            <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800">
                 {[
                     { id: 'list', label: 'Liste des actualités', icon: FileText },
                     { id: 'create', label: selectedNews ? 'Modifier' : 'Créer', icon: Plus }
@@ -248,8 +248,8 @@ const AdminNewsView: React.FC<AdminNewsViewProps> = ({ setActiveView }) => {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id as 'list' | 'create')}
                             className={`flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors ${activeTab === tab.id
-                                ? 'text-blue-700 border-b-2 border-blue-700'
-                                : 'text-slate-500 hover:text-slate-900'
+                                ? 'text-blue-700 dark:text-blue-400 border-b-2 border-blue-700 dark:border-blue-400'
+                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
                                 }`}
                         >
                             <TabIcon className="w-4 h-4" />
@@ -265,20 +265,20 @@ const AdminNewsView: React.FC<AdminNewsViewProps> = ({ setActiveView }) => {
                     {/* Filtres */}
                     <div className="flex flex-wrap gap-3">
                         <div className="flex-1 min-w-[300px] relative">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
                             <input
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 placeholder="Rechercher une actualité..."
-                                className="w-full pl-10 pr-4 py-2 bg-white border border-slate-300 rounded-md text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
+                                className="w-full pl-10 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
                             />
                         </div>
 
                         <select
                             value={filterCategory}
                             onChange={(e) => setFilterCategory(e.target.value)}
-                            className="px-3 py-2 bg-white border border-slate-300 rounded-md text-sm text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
+                            className="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
                         >
                             <option value="all">Toutes les catégories</option>
                             {categories.map((cat) => (
@@ -289,7 +289,7 @@ const AdminNewsView: React.FC<AdminNewsViewProps> = ({ setActiveView }) => {
                         <select
                             value={filterImportance}
                             onChange={(e) => setFilterImportance(e.target.value)}
-                            className="px-3 py-2 bg-white border border-slate-300 rounded-md text-sm text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
+                            className="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
                         >
                             <option value="all">Toute importance</option>
                             <option value="URGENT">Urgente</option>
@@ -314,49 +314,49 @@ const AdminNewsView: React.FC<AdminNewsViewProps> = ({ setActiveView }) => {
                     {loading ? (
                         <div className="grid gap-3">
                             {[1, 2, 3].map((i) => (
-                                <div key={i} className="h-24 bg-slate-100 rounded-lg animate-pulse" />
+                                <div key={i} className="h-24 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
                             ))}
                         </div>
                     ) : error ? (
-                        <div className="text-center py-16 bg-white border border-slate-200 rounded-lg shadow-sm">
+                        <div className="text-center py-16 bg-white dark:bg-[#0f141c] border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
                             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
-                            <p className="text-slate-600 text-sm">{error}</p>
+                            <p className="text-slate-600 dark:text-slate-300 text-sm">{error}</p>
                             <button
                                 onClick={fetchNews}
-                                className="mt-4 px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-md text-sm font-medium"
+                                className="mt-4 px-4 py-2 bg-white dark:bg-[#0f141c] border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded-md text-sm font-medium"
                             >
                                 Réessayer
                             </button>
                         </div>
                     ) : filteredNews.length === 0 ? (
-                        <div className="text-center py-16 bg-white border border-slate-200 rounded-lg shadow-sm">
-                            <AlertCircle className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                            <p className="text-slate-500 text-sm">Aucune actualité trouvée</p>
+                        <div className="text-center py-16 bg-white dark:bg-[#0f141c] border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm">
+                            <AlertCircle className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                            <p className="text-slate-500 dark:text-slate-400 text-sm">Aucune actualité trouvée</p>
                         </div>
                     ) : (
-                        <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+                        <div className="bg-white dark:bg-[#0f141c] border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden">
                             <table className="w-full">
-                                <thead className="bg-slate-50">
+                                <thead className="bg-slate-50 dark:bg-slate-800/50">
                                     <tr>
-                                        <th className="text-left px-4 py-3 text-xs uppercase tracking-wide text-slate-500 font-medium">Titre</th>
-                                        <th className="text-left px-4 py-3 text-xs uppercase tracking-wide text-slate-500 font-medium">Catégorie</th>
-                                        <th className="text-left px-4 py-3 text-xs uppercase tracking-wide text-slate-500 font-medium">Importance</th>
-                                        <th className="text-left px-4 py-3 text-xs uppercase tracking-wide text-slate-500 font-medium">Statut</th>
-                                        <th className="text-right px-4 py-3 text-xs uppercase tracking-wide text-slate-500 font-medium">Vues</th>
-                                        <th className="text-left px-4 py-3 text-xs uppercase tracking-wide text-slate-500 font-medium">Date</th>
-                                        <th className="text-right px-4 py-3 text-xs uppercase tracking-wide text-slate-500 font-medium">Actions</th>
+                                        <th className="text-left px-4 py-3 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-medium">Titre</th>
+                                        <th className="text-left px-4 py-3 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-medium">Catégorie</th>
+                                        <th className="text-left px-4 py-3 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-medium">Importance</th>
+                                        <th className="text-left px-4 py-3 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-medium">Statut</th>
+                                        <th className="text-right px-4 py-3 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-medium">Vues</th>
+                                        <th className="text-left px-4 py-3 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-medium">Date</th>
+                                        <th className="text-right px-4 py-3 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-medium">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {filteredNews.map((item: News) => (
-                                        <tr key={item.id} className="border-t border-slate-100 hover:bg-slate-50">
+                                        <tr key={item.id} className="border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40">
                                             <td className="px-4 py-3">
-                                                <div className="font-medium text-slate-900 text-sm">{item.title}</div>
+                                                <div className="font-medium text-slate-900 dark:text-slate-100 text-sm">{item.title}</div>
                                                 {item.summary && (
-                                                    <div className="text-slate-400 text-xs line-clamp-1 mt-0.5">{item.summary}</div>
+                                                    <div className="text-slate-400 dark:text-slate-500 text-xs line-clamp-1 mt-0.5">{item.summary}</div>
                                                 )}
                                             </td>
-                                            <td className="px-4 py-3 text-sm text-slate-600">
+                                            <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-300">
                                                 {categories.find((c) => c.value === item.category)?.label || item.category}
                                             </td>
                                             <td className="px-4 py-3">
@@ -366,16 +366,16 @@ const AdminNewsView: React.FC<AdminNewsViewProps> = ({ setActiveView }) => {
                                             </td>
                                             <td className="px-4 py-3">
                                                 <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${item.isActive
-                                                    ? 'text-emerald-700 bg-emerald-50 border border-emerald-200'
-                                                    : 'text-slate-600 bg-slate-50 border border-slate-200'
+                                                    ? 'text-emerald-700 bg-emerald-50 border border-emerald-200 dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/30'
+                                                    : 'text-slate-600 bg-slate-50 border border-slate-200 dark:text-slate-300 dark:bg-slate-800/50 dark:border-slate-800'
                                                     }`}>
                                                     {item.isActive ? 'Publié' : 'Brouillon'}
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-3 text-right text-sm text-slate-600 tabular-nums">
+                                            <td className="px-4 py-3 text-right text-sm text-slate-600 dark:text-slate-300 tabular-nums">
                                                 {typeof item.viewCount === 'number' ? item.viewCount : '—'}
                                             </td>
-                                            <td className="px-4 py-3 text-sm text-slate-500 tabular-nums">
+                                            <td className="px-4 py-3 text-sm text-slate-500 dark:text-slate-400 tabular-nums">
                                                 {new Date(item.publishedAt || item.createdAt).toLocaleDateString('fr-FR')}
                                             </td>
                                             <td className="px-4 py-3">
@@ -400,17 +400,17 @@ const AdminNewsView: React.FC<AdminNewsViewProps> = ({ setActiveView }) => {
                                                             setFormError(null);
                                                             setActiveTab('create');
                                                         }}
-                                                        className="p-2 hover:bg-slate-100 rounded-md transition-colors"
+                                                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
                                                         title="Modifier"
                                                     >
-                                                        <Edit3 className="w-4 h-4 text-slate-500" />
+                                                        <Edit3 className="w-4 h-4 text-slate-500 dark:text-slate-400" />
                                                     </button>
                                                     <button
                                                         onClick={() => {
                                                             setSelectedNews(item);
                                                             setShowDeleteModal(true);
                                                         }}
-                                                        className="p-2 hover:bg-red-50 rounded-md transition-colors"
+                                                        className="p-2 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-md transition-colors"
                                                         title="Supprimer"
                                                     >
                                                         <Trash2 className="w-4 h-4 text-red-600" />
@@ -429,49 +429,49 @@ const AdminNewsView: React.FC<AdminNewsViewProps> = ({ setActiveView }) => {
             {activeTab === 'create' && (
                 <form onSubmit={handleSubmit} className="space-y-6 max-w-4xl">
                     {formError && (
-                        <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">
+                        <div className="flex items-start gap-2 p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-md text-sm text-red-700 dark:text-red-400">
                             <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                             <span>{formError}</span>
                         </div>
                     )}
 
                     {/* Informations principales */}
-                    <div className="bg-white border border-slate-200 rounded-lg shadow-sm p-6 space-y-4">
-                        <h3 className="text-base font-semibold text-slate-900">Informations principales</h3>
+                    <div className="bg-white dark:bg-[#0f141c] border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm p-6 space-y-4">
+                        <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">Informations principales</h3>
 
                         <div>
-                            <label className="block text-xs font-medium text-slate-500 mb-1.5">
+                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
                                 Titre <span className="text-red-600">*</span>
                             </label>
                             <input
                                 type="text"
                                 value={formData.title}
                                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                                className="w-full px-4 py-2 bg-white border border-slate-300 rounded-md text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
+                                className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
                                 placeholder="Titre de l'actualité"
                                 required
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-medium text-slate-500 mb-1.5">Résumé</label>
+                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Résumé</label>
                             <textarea
                                 value={formData.summary}
                                 onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
-                                className="w-full px-4 py-2 bg-white border border-slate-300 rounded-md text-sm text-slate-900 placeholder-slate-400 resize-none focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
+                                className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 resize-none focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
                                 placeholder="Résumé court de l'actualité"
                                 rows={2}
                             />
                         </div>
 
                         <div>
-                            <label className="block text-xs font-medium text-slate-500 mb-1.5">
+                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">
                                 Contenu <span className="text-red-600">*</span>
                             </label>
                             <textarea
                                 value={formData.content}
                                 onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                                className="w-full px-4 py-2 bg-white border border-slate-300 rounded-md text-sm text-slate-900 placeholder-slate-400 resize-none focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
+                                className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 resize-none focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
                                 placeholder="Contenu détaillé de l'actualité"
                                 rows={8}
                                 required
@@ -480,16 +480,16 @@ const AdminNewsView: React.FC<AdminNewsViewProps> = ({ setActiveView }) => {
                     </div>
 
                     {/* Catégorie et importance */}
-                    <div className="bg-white border border-slate-200 rounded-lg shadow-sm p-6 space-y-4">
-                        <h3 className="text-base font-semibold text-slate-900">Classification</h3>
+                    <div className="bg-white dark:bg-[#0f141c] border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm p-6 space-y-4">
+                        <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">Classification</h3>
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-xs font-medium text-slate-500 mb-1.5">Catégorie</label>
+                                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Catégorie</label>
                                 <select
                                     value={formData.category}
                                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                    className="w-full px-4 py-2 bg-white border border-slate-300 rounded-md text-sm text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
+                                    className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
                                 >
                                     {categories.map((cat) => (
                                         <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -498,11 +498,11 @@ const AdminNewsView: React.FC<AdminNewsViewProps> = ({ setActiveView }) => {
                             </div>
 
                             <div>
-                                <label className="block text-xs font-medium text-slate-500 mb-1.5">Importance</label>
+                                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Importance</label>
                                 <select
                                     value={formData.importance}
                                     onChange={(e) => setFormData({ ...formData, importance: e.target.value as NewsFormData['importance'] })}
-                                    className="w-full px-4 py-2 bg-white border border-slate-300 rounded-md text-sm text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
+                                    className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
                                 >
                                     <option value="LOW">Basse</option>
                                     <option value="NORMAL">Normale</option>
@@ -514,12 +514,12 @@ const AdminNewsView: React.FC<AdminNewsViewProps> = ({ setActiveView }) => {
 
                         {/* Tags */}
                         <div>
-                            <label className="block text-xs font-medium text-slate-500 mb-1.5">Tags</label>
+                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Tags</label>
                             <div className="flex gap-2 mb-2 flex-wrap">
                                 {formData.tags.map((tag: string, index: number) => (
                                     <span
                                         key={index}
-                                        className="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-full text-xs text-slate-700 flex items-center gap-1.5"
+                                        className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-full text-xs text-slate-700 dark:text-slate-200 flex items-center gap-1.5"
                                     >
                                         {tag}
                                         <button
@@ -529,7 +529,7 @@ const AdminNewsView: React.FC<AdminNewsViewProps> = ({ setActiveView }) => {
                                                 newTags.splice(index, 1);
                                                 setFormData({ ...formData, tags: newTags });
                                             }}
-                                            className="hover:text-red-600"
+                                            className="hover:text-red-600 dark:hover:text-red-400"
                                         >
                                             <X className="w-3 h-3" />
                                         </button>
@@ -549,23 +549,23 @@ const AdminNewsView: React.FC<AdminNewsViewProps> = ({ setActiveView }) => {
                                         }
                                     }
                                 }}
-                                className="w-full px-4 py-2 bg-white border border-slate-300 rounded-md text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
+                                className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
                                 placeholder="Ajouter un tag et appuyer sur Entrée"
                             />
                         </div>
                     </div>
 
                     {/* Image et publication */}
-                    <div className="bg-white border border-slate-200 rounded-lg shadow-sm p-6 space-y-4">
-                        <h3 className="text-base font-semibold text-slate-900">Média et publication</h3>
+                    <div className="bg-white dark:bg-[#0f141c] border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm p-6 space-y-4">
+                        <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">Média et publication</h3>
 
                         <div>
-                            <label className="block text-xs font-medium text-slate-500 mb-1.5">Image (URL)</label>
+                            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Image (URL)</label>
                             <input
                                 type="text"
                                 value={formData.imageUrl}
                                 onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                                className="w-full px-4 py-2 bg-white border border-slate-300 rounded-md text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
+                                className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
                                 placeholder="https://..."
                             />
                             <div className="flex items-center gap-3 mt-2">
@@ -578,13 +578,13 @@ const AdminNewsView: React.FC<AdminNewsViewProps> = ({ setActiveView }) => {
                                 />
                                 <label
                                     htmlFor="image-upload"
-                                    className="px-3 py-1.5 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-md text-sm transition-colors cursor-pointer flex items-center gap-2"
+                                    className="px-3 py-1.5 bg-white dark:bg-[#0f141c] border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded-md text-sm transition-colors cursor-pointer flex items-center gap-2"
                                 >
                                     <Upload className="w-4 h-4" />
                                     Choisir un fichier
                                 </label>
                                 {(imageFile || formData.imageUrl) && (
-                                    <span className="text-xs text-slate-500">
+                                    <span className="text-xs text-slate-500 dark:text-slate-400">
                                         {imageFile ? imageFile.name : 'Image renseignée'}
                                     </span>
                                 )}
@@ -593,12 +593,12 @@ const AdminNewsView: React.FC<AdminNewsViewProps> = ({ setActiveView }) => {
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-xs font-medium text-slate-500 mb-1.5">Date de publication</label>
+                                <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5">Date de publication</label>
                                 <input
                                     type="datetime-local"
                                     value={formData.publishedAt}
                                     onChange={(e) => setFormData({ ...formData, publishedAt: e.target.value })}
-                                    className="w-full px-4 py-2 bg-white border border-slate-300 rounded-md text-sm text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
+                                    className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600"
                                 />
                             </div>
 
@@ -608,9 +608,9 @@ const AdminNewsView: React.FC<AdminNewsViewProps> = ({ setActiveView }) => {
                                         type="checkbox"
                                         checked={formData.isActive}
                                         onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                                        className="w-4 h-4 rounded border-slate-300 text-blue-700 focus:ring-blue-600"
+                                        className="w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-700 focus:ring-blue-600"
                                     />
-                                    <span className="text-sm text-slate-700">Publier immédiatement</span>
+                                    <span className="text-sm text-slate-700 dark:text-slate-200">Publier immédiatement</span>
                                 </label>
                             </div>
                         </div>
@@ -621,9 +621,9 @@ const AdminNewsView: React.FC<AdminNewsViewProps> = ({ setActiveView }) => {
                                     type="checkbox"
                                     checked={formData.sendNotification}
                                     onChange={(e) => setFormData({ ...formData, sendNotification: e.target.checked })}
-                                    className="w-4 h-4 rounded border-slate-300 text-blue-700 focus:ring-blue-600"
+                                    className="w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-blue-700 focus:ring-blue-600"
                                 />
-                                <span className="text-sm text-slate-700">Envoyer une notification push</span>
+                                <span className="text-sm text-slate-700 dark:text-slate-200">Envoyer une notification push</span>
                             </label>
                         )}
                     </div>
@@ -636,14 +636,14 @@ const AdminNewsView: React.FC<AdminNewsViewProps> = ({ setActiveView }) => {
                                 resetForm();
                                 setActiveTab('list');
                             }}
-                            className="px-5 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-md text-sm font-medium transition-colors"
+                            className="px-5 py-2 bg-white dark:bg-[#0f141c] border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded-md text-sm font-medium transition-colors"
                         >
                             Annuler
                         </button>
                         <button
                             type="button"
                             onClick={() => setShowPreview(true)}
-                            className="px-5 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
+                            className="px-5 py-2 bg-white dark:bg-[#0f141c] border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded-md text-sm font-medium transition-colors flex items-center gap-2"
                         >
                             <Eye className="w-4 h-4" />
                             Prévisualiser
@@ -672,16 +672,16 @@ const AdminNewsView: React.FC<AdminNewsViewProps> = ({ setActiveView }) => {
             {/* Modal de suppression */}
             {showDeleteModal && (
                 <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full border border-slate-200">
-                        <h3 className="text-lg font-bold text-slate-900 mb-3">Confirmer la suppression</h3>
-                        <p className="text-slate-600 text-sm mb-6">
+                    <div className="bg-white dark:bg-[#0f141c] rounded-lg shadow-xl p-6 max-w-md w-full border border-slate-200 dark:border-slate-800">
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-3">Confirmer la suppression</h3>
+                        <p className="text-slate-600 dark:text-slate-300 text-sm mb-6">
                             Êtes-vous sûr de vouloir supprimer l&apos;actualité &laquo;&nbsp;{selectedNews?.title}&nbsp;&raquo; ?
                             Cette action est irréversible.
                         </p>
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setShowDeleteModal(false)}
-                                className="flex-1 px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-md text-sm font-medium transition-colors"
+                                className="flex-1 px-4 py-2 bg-white dark:bg-[#0f141c] border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded-md text-sm font-medium transition-colors"
                             >
                                 Annuler
                             </button>
@@ -699,34 +699,34 @@ const AdminNewsView: React.FC<AdminNewsViewProps> = ({ setActiveView }) => {
             {/* Modal de prévisualisation */}
             {showPreview && (
                 <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg shadow-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-slate-200">
+                    <div className="bg-white dark:bg-[#0f141c] rounded-lg shadow-xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-slate-200 dark:border-slate-800">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-lg font-bold text-slate-900">Prévisualisation</h3>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Prévisualisation</h3>
                             <button
                                 onClick={() => setShowPreview(false)}
-                                className="p-2 hover:bg-slate-100 rounded-md transition-colors"
+                                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-md transition-colors"
                             >
-                                <X className="w-5 h-5 text-slate-500" />
+                                <X className="w-5 h-5 text-slate-500 dark:text-slate-400" />
                             </button>
                         </div>
 
                         <article className="max-w-none">
-                            <h1 className="text-2xl font-bold text-slate-900 mb-3">{formData.title}</h1>
+                            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-3">{formData.title}</h1>
                             {formData.summary && (
-                                <p className="text-base text-slate-600 mb-5">{formData.summary}</p>
+                                <p className="text-base text-slate-600 dark:text-slate-300 mb-5">{formData.summary}</p>
                             )}
                             {formData.imageUrl && (
                                 <img
                                     src={formData.imageUrl}
                                     alt={formData.title}
-                                    className="w-full max-h-80 object-cover rounded-lg mb-5 border border-slate-200"
+                                    className="w-full max-h-80 object-cover rounded-lg mb-5 border border-slate-200 dark:border-slate-800"
                                 />
                             )}
-                            <div className="whitespace-pre-wrap text-slate-700 text-sm leading-relaxed">{formData.content}</div>
+                            <div className="whitespace-pre-wrap text-slate-700 dark:text-slate-200 text-sm leading-relaxed">{formData.content}</div>
                             {formData.tags.length > 0 && (
                                 <div className="flex gap-2 mt-6 flex-wrap">
                                     {formData.tags.map((tag: string, index: number) => (
-                                        <span key={index} className="px-2.5 py-1 bg-slate-100 border border-slate-200 rounded-full text-xs text-slate-600">
+                                        <span key={index} className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-full text-xs text-slate-600 dark:text-slate-300">
                                             #{tag}
                                         </span>
                                     ))}

@@ -172,22 +172,22 @@ const NewsCard = ({ article, priority }: { article: News; priority: boolean }) =
 
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
-      'MARKET_UPDATE': 'text-blue-700 bg-blue-50 border border-blue-200',
-      'STARTUP_NEWS': 'text-emerald-700 bg-emerald-50 border border-emerald-200',
-      'INVESTMENT': 'text-amber-700 bg-amber-50 border border-amber-200',
-      'REGULATION': 'text-purple-700 bg-purple-50 border border-purple-200',
-      'TECHNOLOGY': 'text-cyan-700 bg-cyan-50 border border-cyan-200',
-      'ANALYSIS': 'text-slate-600 bg-slate-50 border border-slate-200'
+      'MARKET_UPDATE': 'text-blue-700 bg-blue-50 border border-blue-200 dark:text-blue-400 dark:bg-blue-500/10 dark:border-blue-500/30',
+      'STARTUP_NEWS': 'text-emerald-700 bg-emerald-50 border border-emerald-200 dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/30',
+      'INVESTMENT': 'text-amber-700 bg-amber-50 border border-amber-200 dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/30',
+      'REGULATION': 'text-purple-700 bg-purple-50 border border-purple-200 dark:text-purple-400 dark:bg-purple-500/10 dark:border-purple-500/30',
+      'TECHNOLOGY': 'text-cyan-700 bg-cyan-50 border border-cyan-200 dark:text-cyan-400 dark:bg-cyan-500/10 dark:border-cyan-500/30',
+      'ANALYSIS': 'text-slate-600 bg-slate-50 border border-slate-200 dark:text-slate-300 dark:bg-slate-800/50 dark:border-slate-800'
     };
-    return colors[category] || 'text-slate-600 bg-slate-50 border border-slate-200';
+    return colors[category] || 'text-slate-600 bg-slate-50 border border-slate-200 dark:text-slate-300 dark:bg-slate-800/50 dark:border-slate-800';
   };
 
   const getImportanceBadge = (importance: string) => {
     const badges: Record<string, { color: string; text: string; pulse?: boolean }> = {
-      'URGENT': { color: 'text-red-700 bg-red-50 border border-red-200', text: 'URGENT', pulse: true },
-      'HIGH': { color: 'text-amber-700 bg-amber-50 border border-amber-200', text: 'IMPORTANT' },
-      'NORMAL': { color: 'text-blue-700 bg-blue-50 border border-blue-200', text: 'INFO' },
-      'LOW': { color: 'text-slate-600 bg-slate-50 border border-slate-200', text: 'SECONDAIRE' }
+      'URGENT': { color: 'text-red-700 bg-red-50 border border-red-200 dark:text-red-400 dark:bg-red-500/10 dark:border-red-500/30', text: 'URGENT', pulse: true },
+      'HIGH': { color: 'text-amber-700 bg-amber-50 border border-amber-200 dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/30', text: 'IMPORTANT' },
+      'NORMAL': { color: 'text-blue-700 bg-blue-50 border border-blue-200 dark:text-blue-400 dark:bg-blue-500/10 dark:border-blue-500/30', text: 'INFO' },
+      'LOW': { color: 'text-slate-600 bg-slate-50 border border-slate-200 dark:text-slate-300 dark:bg-slate-800/50 dark:border-slate-800', text: 'SECONDAIRE' }
     };
     return badges[importance] || badges.NORMAL;
   };
@@ -200,7 +200,7 @@ const NewsCard = ({ article, priority }: { article: News; priority: boolean }) =
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
       whileHover={{ y: -2 }}
-      className="group relative bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden hover:border-slate-300 transition-all duration-300"
+      className="group relative bg-white dark:bg-[#0f141c] border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden hover:border-slate-300 dark:hover:border-slate-700 transition-all duration-300"
     >
       {/* Badge importance */}
       {article.importance !== 'NORMAL' && (
@@ -212,7 +212,7 @@ const NewsCard = ({ article, priority }: { article: News; priority: boolean }) =
       )}
 
       {/* Image avec fallback */}
-      <div className="relative h-48 overflow-hidden bg-slate-100">
+      <div className="relative h-48 overflow-hidden bg-slate-100 dark:bg-slate-800">
         {article.imageUrl && !imageError ? (
           <img
             src={article.imageUrl}
@@ -223,7 +223,7 @@ const NewsCard = ({ article, priority }: { article: News; priority: boolean }) =
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Globe className="w-16 h-16 text-slate-300" />
+            <Globe className="w-16 h-16 text-slate-300 dark:text-slate-600" />
           </div>
         )}
 
@@ -245,12 +245,12 @@ const NewsCard = ({ article, priority }: { article: News; priority: boolean }) =
 
       {/* Contenu */}
       <div className="p-6">
-        <h3 className="text-lg font-semibold text-slate-900 mb-2 group-hover:text-blue-700 transition-colors line-clamp-2">
+        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2 group-hover:text-blue-700 transition-colors line-clamp-2">
           {article.title}
         </h3>
 
         {article.summary && (
-          <p className="text-slate-500 text-sm mb-4 line-clamp-2">
+          <p className="text-slate-500 dark:text-slate-400 text-sm mb-4 line-clamp-2">
             {article.summary}
           </p>
         )}
@@ -259,7 +259,7 @@ const NewsCard = ({ article, priority }: { article: News; priority: boolean }) =
         {article.tags && article.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
             {article.tags.slice(0, 3).map(tag => (
-              <span key={tag} className="text-xs px-2 py-1 bg-slate-100 rounded-full text-slate-600">
+              <span key={tag} className="text-xs px-2 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-slate-600 dark:text-slate-300">
                 #{tag}
               </span>
             ))}
@@ -267,7 +267,7 @@ const NewsCard = ({ article, priority }: { article: News; priority: boolean }) =
         )}
 
         {/* Métadonnées */}
-        <div className="flex items-center justify-between text-xs text-slate-400 pt-3 border-t border-slate-100">
+        <div className="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500 pt-3 border-t border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
               <Calendar className="w-3 h-3" />
@@ -275,7 +275,7 @@ const NewsCard = ({ article, priority }: { article: News; priority: boolean }) =
             </span>
             <span className="tabular-nums">{article.viewCount} vues</span>
           </div>
-          <span className="text-slate-500">{article.author.name}</span>
+          <span className="text-slate-500 dark:text-slate-400">{article.author.name}</span>
         </div>
       </div>
     </motion.article>
@@ -318,22 +318,22 @@ export default function NewsSection() {
       {/* Header avec indicateur de connexion */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
             Actualités du marché
           </h2>
           <div className="flex items-center gap-4">
-            <p className="text-slate-500">Mises à jour en temps réel</p>
-            <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${connected ? 'bg-emerald-50 border border-emerald-200' : 'bg-red-50 border border-red-200'
+            <p className="text-slate-500 dark:text-slate-400">Mises à jour en temps réel</p>
+            <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${connected ? 'bg-emerald-50 border border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/30' : 'bg-red-50 border border-red-200 dark:bg-red-500/10 dark:border-red-500/30'
               }`}>
               {connected ? (
                 <>
                   <Wifi className="w-4 h-4 text-emerald-600" />
-                  <span className="text-xs font-medium text-emerald-700">Connecté</span>
+                  <span className="text-xs font-medium text-emerald-700 dark:text-emerald-400">Connecté</span>
                 </>
               ) : (
                 <>
                   <WifiOff className="w-4 h-4 text-red-600" />
-                  <span className="text-xs font-medium text-red-700">Hors ligne</span>
+                  <span className="text-xs font-medium text-red-700 dark:text-red-400">Hors ligne</span>
                 </>
               )}
             </div>
@@ -345,7 +345,7 @@ export default function NewsSection() {
           <select
             value={filters.category}
             onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-            className="px-4 py-2 bg-white border border-slate-300 rounded-md text-slate-700 hover:bg-slate-50"
+            className="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-slate-700 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40"
           >
             {categories.map(cat => (
               <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -355,7 +355,7 @@ export default function NewsSection() {
           <select
             value={filters.importance}
             onChange={(e) => setFilters({ ...filters, importance: e.target.value })}
-            className="px-4 py-2 bg-white border border-slate-300 rounded-md text-slate-700 hover:bg-slate-50"
+            className="px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-slate-700 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40"
           >
             {importanceLevels.map(level => (
               <option key={level.value} value={level.value}>{level.label}</option>
@@ -365,7 +365,7 @@ export default function NewsSection() {
           <button
             onClick={refresh}
             disabled={refreshing}
-            className="p-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-md transition-all disabled:opacity-50"
+            className="p-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded-md transition-all disabled:opacity-50"
           >
             <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
@@ -384,7 +384,7 @@ export default function NewsSection() {
               className="grid md:grid-cols-3 gap-6"
             >
               {[1, 2, 3].map(i => (
-                <div key={`skeleton-${i}`} className="h-96 bg-slate-100 border border-slate-200 rounded-lg animate-pulse" />
+                <div key={`skeleton-${i}`} className="h-96 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-lg animate-pulse" />
               ))}
             </motion.div>
           ) : news.length === 0 ? (
@@ -395,8 +395,8 @@ export default function NewsSection() {
               exit={{ opacity: 0 }}
               className="text-center py-20"
             >
-              <AlertCircle className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-500">Aucune actualité disponible</p>
+              <AlertCircle className="w-16 h-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+              <p className="text-slate-500 dark:text-slate-400">Aucune actualité disponible</p>
             </motion.div>
           ) : (
             <motion.div
@@ -429,7 +429,7 @@ export default function NewsSection() {
       {/* Loader pour pagination */}
       {!loading && hasMore && (
         <div className="flex justify-center mt-8">
-          <div className="flex items-center gap-2 text-slate-500">
+          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
             <RefreshCw className="w-4 h-4 animate-spin" />
             <span>Chargement...</span>
           </div>

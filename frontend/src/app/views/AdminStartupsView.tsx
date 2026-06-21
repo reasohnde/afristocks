@@ -114,12 +114,12 @@ const AdminStartupsView: React.FC<AdminStartupsViewProps> = ({ setActiveView }) 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Gestion des startups</h1>
-          <p className="text-slate-500 mt-1 text-sm">Gérez les startups de la plateforme</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Gestion des startups</h1>
+          <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">Gérez les startups de la plateforme</p>
         </div>
         <button
           onClick={() => setActiveView('admin-dashboard')}
-          className="px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-md transition-colors text-sm flex items-center gap-2"
+          className="px-4 py-2 bg-white dark:bg-[#0f141c] border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded-md transition-colors text-sm flex items-center gap-2"
         >
           <ArrowLeft className="w-4 h-4" />
           Retour au dashboard
@@ -127,7 +127,7 @@ const AdminStartupsView: React.FC<AdminStartupsViewProps> = ({ setActiveView }) 
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-md px-4 py-3">
+        <div className="flex items-center gap-2 text-sm text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-md px-4 py-3">
           <AlertCircle className="w-4 h-4 shrink-0" />
           {error}
         </div>
@@ -136,20 +136,20 @@ const AdminStartupsView: React.FC<AdminStartupsViewProps> = ({ setActiveView }) 
       {/* Filtres */}
       <div className="flex flex-wrap gap-3">
         <div className="flex-1 min-w-[260px] relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-slate-500" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Rechercher une startup..."
-            className="w-full pl-9 pr-4 py-2 bg-white border border-slate-300 rounded-md text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-600"
+            className="w-full pl-9 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-600"
           />
         </div>
 
         <select
           value={filter}
           onChange={(e) => setFilter(e.target.value as 'all' | 'active' | 'inactive')}
-          className="px-3 py-2 bg-white border border-slate-300 rounded-md text-sm text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600"
+          className="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-600"
         >
           <option value="all">Toutes</option>
           <option value="active">Actives</option>
@@ -158,7 +158,7 @@ const AdminStartupsView: React.FC<AdminStartupsViewProps> = ({ setActiveView }) 
 
         <button
           onClick={fetchStartups}
-          className="px-3 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-md transition-colors text-sm flex items-center gap-2"
+          className="px-3 py-2 bg-white dark:bg-[#0f141c] border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded-md transition-colors text-sm flex items-center gap-2"
         >
           <RefreshCw className="w-4 h-4" />
           Actualiser
@@ -166,55 +166,55 @@ const AdminStartupsView: React.FC<AdminStartupsViewProps> = ({ setActiveView }) 
       </div>
 
       {/* Tableau */}
-      <div className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-[#0f141c] border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden">
         {loading ? (
-          <div className="p-10 text-center text-slate-400 text-sm">Chargement…</div>
+          <div className="p-10 text-center text-slate-400 dark:text-slate-500 text-sm">Chargement…</div>
         ) : filteredStartups.length === 0 ? (
           <div className="text-center py-16">
-            <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <p className="text-slate-500 text-sm">Aucune startup trouvée</p>
+            <Building2 className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+            <p className="text-slate-500 dark:text-slate-400 text-sm">Aucune startup trouvée</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-slate-50">
+              <thead className="bg-slate-50 dark:bg-slate-800/50">
                 <tr>
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wide text-slate-500 font-medium">Nom</th>
-                  <th className="text-right px-4 py-3 text-xs uppercase tracking-wide text-slate-500 font-medium">Objectif (valorisation)</th>
-                  <th className="text-right px-4 py-3 text-xs uppercase tracking-wide text-slate-500 font-medium">Montant levé</th>
-                  <th className="text-right px-4 py-3 text-xs uppercase tracking-wide text-slate-500 font-medium">Invest. min / max</th>
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wide text-slate-500 font-medium">Période</th>
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wide text-slate-500 font-medium">Statut</th>
-                  <th className="text-right px-4 py-3 text-xs uppercase tracking-wide text-slate-500 font-medium">Actions</th>
+                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-medium">Nom</th>
+                  <th className="text-right px-4 py-3 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-medium">Objectif (valorisation)</th>
+                  <th className="text-right px-4 py-3 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-medium">Montant levé</th>
+                  <th className="text-right px-4 py-3 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-medium">Invest. min / max</th>
+                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-medium">Période</th>
+                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-medium">Statut</th>
+                  <th className="text-right px-4 py-3 text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredStartups.map((startup) => (
-                  <tr key={startup.id} className="border-t border-slate-100 hover:bg-slate-50">
+                  <tr key={startup.id} className="border-t border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/40">
                     <td className="px-4 py-3 align-top">
-                      <p className="font-medium text-slate-900">{startup.name}</p>
+                      <p className="font-medium text-slate-900 dark:text-slate-100">{startup.name}</p>
                       {startup.description && (
-                        <p className="text-slate-400 text-xs mt-0.5 line-clamp-2 max-w-xs">{startup.description}</p>
+                        <p className="text-slate-400 dark:text-slate-500 text-xs mt-0.5 line-clamp-2 max-w-xs">{startup.description}</p>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-900">
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-900 dark:text-slate-100">
                       {fmtAmount(startup.valuationTarget)} XOF
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-900">
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-900 dark:text-slate-100">
                       {fmtAmount(startup.raisedAmount)} XOF
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-slate-700">
+                    <td className="px-4 py-3 text-right tabular-nums text-slate-700 dark:text-slate-200">
                       {fmtAmount(startup.minInvestment)} / {fmtAmount(startup.maxInvestment)} XOF
                     </td>
-                    <td className="px-4 py-3 text-slate-700 whitespace-nowrap">
+                    <td className="px-4 py-3 text-slate-700 dark:text-slate-200 whitespace-nowrap">
                       {fmtDate(startup.startDate)} → {fmtDate(startup.endDate)}
                     </td>
                     <td className="px-4 py-3">
                       <span
                         className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium border ${
                           startup.isActive
-                            ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
-                            : 'text-slate-600 bg-slate-50 border-slate-200'
+                            ? 'text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30'
+                            : 'text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-800'
                         }`}
                       >
                         {startup.isActive ? 'Active' : 'Inactive'}
@@ -224,14 +224,14 @@ const AdminStartupsView: React.FC<AdminStartupsViewProps> = ({ setActiveView }) 
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => setEditing({ ...startup })}
-                          className="px-3 py-1.5 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-md text-xs transition-colors"
+                          className="px-3 py-1.5 bg-white dark:bg-[#0f141c] border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded-md text-xs transition-colors"
                         >
                           Modifier
                         </button>
                         <button
                           onClick={() => handleToggleStatus(startup.id)}
                           disabled={togglingId === startup.id}
-                          className="px-3 py-1.5 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-md text-xs transition-colors disabled:opacity-50"
+                          className="px-3 py-1.5 bg-white dark:bg-[#0f141c] border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded-md text-xs transition-colors disabled:opacity-50"
                         >
                           {startup.isActive ? 'Désactiver' : 'Activer'}
                         </button>
@@ -248,12 +248,12 @@ const AdminStartupsView: React.FC<AdminStartupsViewProps> = ({ setActiveView }) 
       {/* Modal d'édition */}
       {editing && (
         <div className="fixed inset-0 bg-slate-900/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white border border-slate-200 rounded-lg shadow-sm w-full max-w-lg">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-900">Modifier la startup</h3>
+          <div className="bg-white dark:bg-[#0f141c] border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm w-full max-w-lg">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Modifier la startup</h3>
               <button
                 onClick={() => setEditing(null)}
-                className="text-slate-400 hover:text-slate-600"
+                className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -261,89 +261,89 @@ const AdminStartupsView: React.FC<AdminStartupsViewProps> = ({ setActiveView }) 
 
             <div className="px-6 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
               <div>
-                <label className="block text-xs uppercase tracking-wide text-slate-500 mb-1">Nom</label>
+                <label className="block text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">Nom</label>
                 <input
                   type="text"
                   value={editing.name}
                   onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-600"
                 />
               </div>
 
               <div>
-                <label className="block text-xs uppercase tracking-wide text-slate-500 mb-1">Description</label>
+                <label className="block text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">Description</label>
                 <textarea
                   value={editing.description}
                   onChange={(e) => setEditing({ ...editing, description: e.target.value })}
                   rows={3}
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-600"
                 />
               </div>
 
               <div>
-                <label className="block text-xs uppercase tracking-wide text-slate-500 mb-1">Objectif de valorisation (XOF)</label>
+                <label className="block text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">Objectif de valorisation (XOF)</label>
                 <input
                   type="number"
                   value={editing.valuationTarget}
                   onChange={(e) => setEditing({ ...editing, valuationTarget: Number(e.target.value) })}
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm text-slate-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-blue-600"
+                  className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-100 tabular-nums focus:outline-none focus:ring-1 focus:ring-blue-600"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs uppercase tracking-wide text-slate-500 mb-1">Invest. min (XOF)</label>
+                  <label className="block text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">Invest. min (XOF)</label>
                   <input
                     type="number"
                     value={editing.minInvestment}
                     onChange={(e) => setEditing({ ...editing, minInvestment: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm text-slate-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-blue-600"
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-100 tabular-nums focus:outline-none focus:ring-1 focus:ring-blue-600"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs uppercase tracking-wide text-slate-500 mb-1">Invest. max (XOF)</label>
+                  <label className="block text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">Invest. max (XOF)</label>
                   <input
                     type="number"
                     value={editing.maxInvestment}
                     onChange={(e) => setEditing({ ...editing, maxInvestment: Number(e.target.value) })}
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm text-slate-900 tabular-nums focus:outline-none focus:ring-1 focus:ring-blue-600"
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-100 tabular-nums focus:outline-none focus:ring-1 focus:ring-blue-600"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs uppercase tracking-wide text-slate-500 mb-1">Date de début</label>
+                  <label className="block text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">Date de début</label>
                   <input
                     type="date"
                     value={editing.startDate ? editing.startDate.slice(0, 10) : ''}
                     onChange={(e) => setEditing({ ...editing, startDate: e.target.value })}
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-600"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs uppercase tracking-wide text-slate-500 mb-1">Date de fin</label>
+                  <label className="block text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 mb-1">Date de fin</label>
                   <input
                     type="date"
                     value={editing.endDate ? editing.endDate.slice(0, 10) : ''}
                     onChange={(e) => setEditing({ ...editing, endDate: e.target.value })}
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-md text-sm text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-600"
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-md text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-600"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="flex gap-3 px-6 py-4 border-t border-slate-200">
+            <div className="flex gap-3 px-6 py-4 border-t border-slate-200 dark:border-slate-800">
               <button
                 onClick={() => setEditing(null)}
-                className="flex-1 px-4 py-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-md transition-colors text-sm"
+                className="flex-1 px-4 py-2 bg-white dark:bg-[#0f141c] border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded-md transition-colors text-sm"
               >
                 Annuler
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex-1 px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-md transition-colors text-sm disabled:opacity-50"
+                className="flex-1 px-4 py-2 bg-blue-700 dark:bg-blue-600 hover:bg-blue-800 text-white rounded-md transition-colors text-sm disabled:opacity-50"
               >
                 {saving ? 'Enregistrement…' : 'Enregistrer'}
               </button>
