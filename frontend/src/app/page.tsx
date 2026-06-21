@@ -976,6 +976,23 @@ const AfriStocksApp = () => {
     </header>
   );
 
+  // Footer clair minimal (affiché dans l'espace connecté)
+  const AppFooterLight = () => (
+    <footer className="bg-white border-t border-slate-200 mt-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <TrendingUp className="w-5 h-5 text-blue-700" />
+          <span className="text-sm font-semibold text-slate-800">AfriStocks</span>
+        </div>
+        <p className="text-xs text-slate-400 text-center">© 2026 AfriStocks · Investir comporte des risques de perte en capital.</p>
+        <div className="flex items-center gap-4 text-xs text-slate-500">
+          <button onClick={() => setActiveView('faq')} className="hover:text-slate-800 transition-colors">FAQ</button>
+          <button onClick={() => setActiveView('formations')} className="hover:text-slate-800 transition-colors">Formations</button>
+        </div>
+      </div>
+    </footer>
+  );
+
   // Footer Component MODIFIÉ sans alertes
   const Footer = () => {
     // Fonction pour gérer les clics sur les liens du footer
@@ -1533,7 +1550,7 @@ const AfriStocksApp = () => {
           )}
         </main>
 
-        <Footer />
+        {isAuthenticated ? <AppFooterLight /> : <Footer />}
 
         {/* Toast notifications */}
         {toast?.show && (
