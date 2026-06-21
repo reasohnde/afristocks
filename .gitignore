@@ -1,5 +1,60 @@
-node_modules
-# Keep environment variables out of version control
-.env
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
 
+# Environment variables - NEVER commit these
+.env
+.env.*
+# Templates (placeholders uniquement) — committables comme documentation
+!.env.example
+!.env.production.example
+!*.example
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backup files - use git instead
+*.bak
+*.backup
+*.orig
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Prisma
 /app/generated/prisma
+
+# Docker
+docker-compose.override.yml
+
+# Mobile
+mobile/ios/Pods/
+mobile/android/.gradle/
+mobile/android/app/build/
+mobile/ios/build/
+
+# Misc
+*.tgz
+.cache
+.temp

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { AuthService } from '../services/auth.service';
+import { authenticateToken } from '../middleware/auth.middleware';
 
 const router = Router();
 
@@ -40,10 +41,11 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Logout
-router.post('/logout', async (req, res) => {
+// Logout — l'identité provient du token, pas du body (anti-IDOR)
+router.post('/logout', authenticateToken, async (req, res) => {
   try {
-    const { userId, refreshToken } = req.body;
+    const userId = req.user!.userId;
+    const { refreshToken } = req.body;
     await AuthService.logout(userId, refreshToken);
     res.json({
       success: true,
@@ -57,7 +59,7 @@ router.post('/logout', async (req, res) => {
   }
 });
 
-// Refresh Token
+// Refresh Token — le refresh token (secret porté par le client) suffit à prouver l'identité
 router.post('/refresh-token', async (req, res) => {
   try {
     const { refreshToken } = req.body;
@@ -74,10 +76,10 @@ router.post('/refresh-token', async (req, res) => {
   }
 });
 
-// 2FA Generate
-router.post('/2fa/generate', async (req, res) => {
+// 2FA Generate — protégé : l'utilisateur ne configure le 2FA QUE pour lui-même
+router.post('/2fa/generate', authenticateToken, async (req, res) => {
   try {
-    const { userId } = req.body; // Temporaire, sera remplacé par req.user
+    const userId = req.user!.userId;
     const result = await AuthService.generateTwoFactorSecret(userId);
     res.json({
       success: true,
@@ -91,10 +93,11 @@ router.post('/2fa/generate', async (req, res) => {
   }
 });
 
-// 2FA Verify
-router.post('/2fa/verify', async (req, res) => {
+// 2FA Verify — protégé : userId issu du token (anti-IDOR)
+router.post('/2fa/verify', authenticateToken, async (req, res) => {
   try {
-    const { userId, token } = req.body; // Temporaire
+    const userId = req.user!.userId;
+    const { token } = req.body;
     const isValid = await AuthService.verifyTwoFactorToken(userId, token);
     res.json({
       success: true,

@@ -12,23 +12,55 @@ import routes from './routes';
 import { prisma, checkDatabaseConnection } from './config/database';
 import { redis } from './config/redis';
 import { apiLimiter } from './middleware/rateLimit.middleware';
+import { verifyAccessToken } from './utils/token.utils';
 
 // Charger les variables d'environnement
 dotenv.config();
+
+// Origines autorisées (CORS) — liste blanche via env (séparées par des virgules)
+const allowedOrigins = (process.env.CORS_ORIGINS || process.env.FRONTEND_URL || 'http://localhost:3001')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
 
 // Créer l'application Express
 const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.FRONTEND_URL || 'http://localhost:3001',
+    origin: allowedOrigins,
     credentials: true
+  }
+});
+
+// Authentification des connexions Socket.io : un JWT valide est obligatoire.
+// Le userId provient du token (jamais du client) pour empêcher l'écoute des rooms d'autrui.
+io.use((socket, next) => {
+  try {
+    const raw =
+      (socket.handshake.auth && socket.handshake.auth.token) ||
+      (socket.handshake.headers.authorization || '').split(' ')[1];
+    if (!raw) return next(new Error('Authentification requise'));
+    const decoded = verifyAccessToken(raw);
+    (socket.data as any).userId = decoded.userId;
+    return next();
+  } catch {
+    return next(new Error('Token invalide ou expiré'));
   }
 });
 
 // Middlewares de sécurité
 app.use(helmet());
-app.use(cors()); // Accepte toutes les origines temporairement
+app.use(
+  cors({
+    origin(origin, callback) {
+      // Autoriser les requêtes sans en-tête Origin (apps mobiles natives, curl, SSR)
+      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      return callback(new Error('Origine non autorisée par CORS: ' + origin));
+    },
+    credentials: true
+  })
+);
 
 // Middlewares généraux
 app.use(compression());
@@ -63,12 +95,10 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 
 // Socket.io pour les notifications temps réel
 io.on('connection', (socket) => {
-  console.log('Nouvelle connexion Socket.io:', socket.id);
-
-  socket.on('join', (userId: string) => {
-    socket.join(`user:${userId}`);
-    console.log(`User ${userId} joined room`);
-  });
+  const userId = (socket.data as any).userId as string;
+  // Chaque socket rejoint UNIQUEMENT sa propre room (déterminée par le token, pas par le client)
+  socket.join(`user:${userId}`);
+  console.log('Nouvelle connexion Socket.io:', socket.id, '→ user:' + userId);
 
   socket.on('disconnect', () => {
     console.log('Déconnexion Socket.io:', socket.id);
@@ -94,7 +124,7 @@ async function startServer() {
       console.log(`
         🚀 Serveur démarré sur le port ${PORT}
         📊 Environnement: ${process.env.NODE_ENV || 'development'}
-        🌍 Frontend URL: ${process.env.FRONTEND_URL || 'http://localhost:3001'}
+        🌍 Origines autorisées: ${allowedOrigins.join(', ')}
       `);
     });
   } catch (error) {
