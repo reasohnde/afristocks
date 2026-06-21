@@ -172,22 +172,22 @@ const NewsCard = ({ article, priority }: { article: News; priority: boolean }) =
 
   const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
-      'MARKET_UPDATE': 'from-blue-500 to-indigo-500',
-      'STARTUP_NEWS': 'from-emerald-500 to-teal-500',
-      'INVESTMENT': 'from-orange-500 to-amber-500',
-      'REGULATION': 'from-purple-500 to-pink-500',
-      'TECHNOLOGY': 'from-cyan-500 to-blue-500',
-      'ANALYSIS': 'from-gray-500 to-gray-600'
+      'MARKET_UPDATE': 'text-blue-700 bg-blue-50 border border-blue-200',
+      'STARTUP_NEWS': 'text-emerald-700 bg-emerald-50 border border-emerald-200',
+      'INVESTMENT': 'text-amber-700 bg-amber-50 border border-amber-200',
+      'REGULATION': 'text-purple-700 bg-purple-50 border border-purple-200',
+      'TECHNOLOGY': 'text-cyan-700 bg-cyan-50 border border-cyan-200',
+      'ANALYSIS': 'text-slate-600 bg-slate-50 border border-slate-200'
     };
-    return colors[category] || 'from-gray-500 to-gray-600';
+    return colors[category] || 'text-slate-600 bg-slate-50 border border-slate-200';
   };
 
   const getImportanceBadge = (importance: string) => {
     const badges: Record<string, { color: string; text: string; pulse?: boolean }> = {
-      'URGENT': { color: 'bg-red-500', text: 'URGENT', pulse: true },
-      'HIGH': { color: 'bg-orange-500', text: 'IMPORTANT' },
-      'NORMAL': { color: 'bg-blue-500', text: 'INFO' },
-      'LOW': { color: 'bg-gray-500', text: 'SECONDAIRE' }
+      'URGENT': { color: 'text-red-700 bg-red-50 border border-red-200', text: 'URGENT', pulse: true },
+      'HIGH': { color: 'text-amber-700 bg-amber-50 border border-amber-200', text: 'IMPORTANT' },
+      'NORMAL': { color: 'text-blue-700 bg-blue-50 border border-blue-200', text: 'INFO' },
+      'LOW': { color: 'text-slate-600 bg-slate-50 border border-slate-200', text: 'SECONDAIRE' }
     };
     return badges[importance] || badges.NORMAL;
   };
@@ -199,50 +199,44 @@ const NewsCard = ({ article, priority }: { article: News; priority: boolean }) =
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      whileHover={{ y: -4 }}
-      className="group relative backdrop-blur-xl rounded-2xl border border-white/20 overflow-hidden hover:border-white/30 transition-all duration-300"
-      style={{
-        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)'
-      }}
+      whileHover={{ y: -2 }}
+      className="group relative bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden hover:border-slate-300 transition-all duration-300"
     >
       {/* Badge importance */}
       {article.importance !== 'NORMAL' && (
         <div className="absolute top-4 right-4 z-20">
-          <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${badge.color} ${badge.pulse ? 'animate-pulse' : ''}`}>
+          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${badge.color} ${badge.pulse ? 'animate-pulse' : ''}`}>
             {badge.text}
           </span>
         </div>
       )}
 
       {/* Image avec fallback */}
-      <div className="relative h-48 overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900">
+      <div className="relative h-48 overflow-hidden bg-slate-100">
         {article.imageUrl && !imageError ? (
           <img
             src={article.imageUrl}
             alt={article.title}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             onError={() => setImageError(true)}
             loading={priority ? 'eager' : 'lazy'}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Globe className="w-16 h-16 text-white/20" />
+            <Globe className="w-16 h-16 text-slate-300" />
           </div>
         )}
 
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-
         {/* Catégorie */}
         <div className="absolute top-4 left-4">
-          <span className={`px-3 py-1 rounded-full text-xs font-semibold text-white bg-gradient-to-r ${getCategoryColor(article.category)}`}>
+          <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${getCategoryColor(article.category)}`}>
             {article.category.replace('_', ' ')}
           </span>
         </div>
 
         {/* Live indicator pour les news urgentes */}
         {article.importance === 'URGENT' && (
-          <div className="absolute bottom-4 right-4 flex items-center gap-2 px-3 py-1 bg-red-500/80 backdrop-blur rounded-full">
+          <div className="absolute bottom-4 right-4 flex items-center gap-2 px-3 py-1 bg-red-600 rounded-full">
             <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
             <span className="text-xs font-semibold text-white">EN DIRECT</span>
           </div>
@@ -251,12 +245,12 @@ const NewsCard = ({ article, priority }: { article: News; priority: boolean }) =
 
       {/* Contenu */}
       <div className="p-6">
-        <h3 className="text-xl font-semibold text-white mb-2 group-hover:text-orange-400 transition-colors line-clamp-2">
+        <h3 className="text-lg font-semibold text-slate-900 mb-2 group-hover:text-blue-700 transition-colors line-clamp-2">
           {article.title}
         </h3>
 
         {article.summary && (
-          <p className="text-white/60 text-sm mb-4 line-clamp-2">
+          <p className="text-slate-500 text-sm mb-4 line-clamp-2">
             {article.summary}
           </p>
         )}
@@ -265,7 +259,7 @@ const NewsCard = ({ article, priority }: { article: News; priority: boolean }) =
         {article.tags && article.tags.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-4">
             {article.tags.slice(0, 3).map(tag => (
-              <span key={tag} className="text-xs px-2 py-1 bg-white/10 rounded-full text-white/70">
+              <span key={tag} className="text-xs px-2 py-1 bg-slate-100 rounded-full text-slate-600">
                 #{tag}
               </span>
             ))}
@@ -273,15 +267,15 @@ const NewsCard = ({ article, priority }: { article: News; priority: boolean }) =
         )}
 
         {/* Métadonnées */}
-        <div className="flex items-center justify-between text-xs text-white/40">
+        <div className="flex items-center justify-between text-xs text-slate-400 pt-3 border-t border-slate-100">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1">
               <Calendar className="w-3 h-3" />
               {new Date(article.publishedAt).toLocaleDateString('fr-FR')}
             </span>
-            <span>{article.viewCount} vues</span>
+            <span className="tabular-nums">{article.viewCount} vues</span>
           </div>
-          <span className="text-white/60">{article.author.name}</span>
+          <span className="text-slate-500">{article.author.name}</span>
         </div>
       </div>
     </motion.article>
@@ -296,16 +290,6 @@ export default function NewsSection() {
   });
 
   const { news, loading, refreshing, hasMore, connected, loadMore, refresh } = useNews(filters);
-
-  // Debug: Afficher les informations de débogage
-  console.log('🔍 NewsSection - État:', {
-    newsCount: news.length,
-    loading,
-    refreshing,
-    hasMore,
-    connected,
-    filters
-  });
 
   // Infinite scroll
   const { sentinelRef } = useInfiniteScroll(loadMore, hasMore);
@@ -334,22 +318,22 @@ export default function NewsSection() {
       {/* Header avec indicateur de connexion */}
       <div className="flex justify-between items-start mb-8">
         <div>
-          <h2 className="text-3xl font-bold text-white mb-2">
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">
             Actualités du marché
           </h2>
           <div className="flex items-center gap-4">
-            <p className="text-white/60">Mises à jour en temps réel</p>
-            <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${connected ? 'bg-emerald-500/20' : 'bg-red-500/20'
+            <p className="text-slate-500">Mises à jour en temps réel</p>
+            <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${connected ? 'bg-emerald-50 border border-emerald-200' : 'bg-red-50 border border-red-200'
               }`}>
               {connected ? (
                 <>
-                  <Wifi className="w-4 h-4 text-emerald-400" />
-                  <span className="text-xs font-medium text-emerald-400">Connecté</span>
+                  <Wifi className="w-4 h-4 text-emerald-600" />
+                  <span className="text-xs font-medium text-emerald-700">Connecté</span>
                 </>
               ) : (
                 <>
-                  <WifiOff className="w-4 h-4 text-red-400" />
-                  <span className="text-xs font-medium text-red-400">Hors ligne</span>
+                  <WifiOff className="w-4 h-4 text-red-600" />
+                  <span className="text-xs font-medium text-red-700">Hors ligne</span>
                 </>
               )}
             </div>
@@ -361,7 +345,7 @@ export default function NewsSection() {
           <select
             value={filters.category}
             onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-            className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white backdrop-blur"
+            className="px-4 py-2 bg-white border border-slate-300 rounded-md text-slate-700 hover:bg-slate-50"
           >
             {categories.map(cat => (
               <option key={cat.value} value={cat.value}>{cat.label}</option>
@@ -371,7 +355,7 @@ export default function NewsSection() {
           <select
             value={filters.importance}
             onChange={(e) => setFilters({ ...filters, importance: e.target.value })}
-            className="px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white backdrop-blur"
+            className="px-4 py-2 bg-white border border-slate-300 rounded-md text-slate-700 hover:bg-slate-50"
           >
             {importanceLevels.map(level => (
               <option key={level.value} value={level.value}>{level.label}</option>
@@ -381,9 +365,9 @@ export default function NewsSection() {
           <button
             onClick={refresh}
             disabled={refreshing}
-            className="p-2 bg-white/10 hover:bg-white/20 rounded-lg transition-all disabled:opacity-50"
+            className="p-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 rounded-md transition-all disabled:opacity-50"
           >
-            <RefreshCw className={`w-5 h-5 text-white ${refreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
@@ -391,20 +375,6 @@ export default function NewsSection() {
       {/* Contenu avec AnimatePresence */}
       <AnimatePresence mode="wait">
         <motion.div key="news-content" className="space-y-6">
-          {/* Debug info */}
-          <div className="mb-4 p-4 bg-white/10 rounded-lg">
-            <p className="text-white/80 text-sm">
-              Debug: {news.length} actualités, Loading: {loading ? 'Oui' : 'Non'},
-              Connected: {connected ? 'Oui' : 'Non'}
-            </p>
-            {news.length > 0 && (
-              <p className="text-white/60 text-xs mt-1">
-                IDs: {news.map(n => n.id || 'SANS_ID').slice(0, 5).join(', ')}
-                {news.length > 5 && '...'}
-              </p>
-            )}
-          </div>
-
           {loading && news.length === 0 ? (
             <motion.div
               key="loading-state"
@@ -414,7 +384,7 @@ export default function NewsSection() {
               className="grid md:grid-cols-3 gap-6"
             >
               {[1, 2, 3].map(i => (
-                <div key={`skeleton-${i}`} className="h-96 bg-white/10 rounded-2xl animate-pulse" />
+                <div key={`skeleton-${i}`} className="h-96 bg-slate-100 border border-slate-200 rounded-lg animate-pulse" />
               ))}
             </motion.div>
           ) : news.length === 0 ? (
@@ -425,8 +395,8 @@ export default function NewsSection() {
               exit={{ opacity: 0 }}
               className="text-center py-20"
             >
-              <AlertCircle className="w-16 h-16 text-white/40 mx-auto mb-4" />
-              <p className="text-white/60">Aucune actualité disponible</p>
+              <AlertCircle className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+              <p className="text-slate-500">Aucune actualité disponible</p>
             </motion.div>
           ) : (
             <motion.div
@@ -459,7 +429,7 @@ export default function NewsSection() {
       {/* Loader pour pagination */}
       {!loading && hasMore && (
         <div className="flex justify-center mt-8">
-          <div className="flex items-center gap-2 text-white/60">
+          <div className="flex items-center gap-2 text-slate-500">
             <RefreshCw className="w-4 h-4 animate-spin" />
             <span>Chargement...</span>
           </div>
