@@ -34,7 +34,7 @@ const SmartNewsSection = () => {
     fetchNews();
 
     // Socket.IO connection
-    const newSocket = io('http://localhost:8080');
+    const newSocket = io(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002');
 
     newSocket.on('connect', () => {
       console.log('Socket.IO connecté');

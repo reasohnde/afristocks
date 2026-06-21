@@ -52,9 +52,9 @@ const useNews = (filters: NewsFilters) => {
         ...filters
       });
 
-      console.log('🔍 Chargement des news:', `http://localhost:5001/api/v1/news?${params}`);
+      console.log('🔍 Chargement des news:', `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}/api/v1/news?${params}`);
 
-      const response = await fetch(`http://localhost:5001/api/v1/news?${params}`);
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}/api/v1/news?${params}`);
       console.log('📡 Réponse API:', response.status, response.statusText);
 
       const data = await response.json();

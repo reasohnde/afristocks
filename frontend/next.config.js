@@ -61,7 +61,7 @@ const nextConfig = {
 
   // Redirects si nécessaire
   async rewrites() {
-    const backendBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+    const backendBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002';
     return [
       {
         source: '/api/:path*',

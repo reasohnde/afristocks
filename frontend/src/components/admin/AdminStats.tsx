@@ -5,7 +5,7 @@ import { Building2, UserCircle, Heart, ShoppingCart, GraduationCap, Truck, Leaf,
 
 import StartupDashboardView from '../../app/views/StartupDashboardView';
 
-const API_URL = 'http://localhost:8000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002';
 
 interface User {
   id?: string;

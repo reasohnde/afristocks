@@ -1,5 +1,5 @@
 // src/services/fundService.ts
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002';
 
 export interface FundData {
     id?: string;

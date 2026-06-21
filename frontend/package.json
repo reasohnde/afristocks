@@ -59,5 +59,8 @@
     "jest-environment-jsdom": "^30.0.4",
     "postcss": "^8.5.6",
     "typescript": "^5"
+  },
+  "optionalDependencies": {
+    "@next/swc-linux-arm64-gnu": "^15.3.5"
   }
 }

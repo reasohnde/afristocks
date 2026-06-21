@@ -1,7 +1,7 @@
 // frontend/src/contexts/FundContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002';
 
 interface FundData {
   id: string;

@@ -29,12 +29,14 @@
   },
   "dependencies": {
     "@prisma/client": "^6.11.1",
+    "@prisma/engine-core": "^4.13.0",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
     "bcrypt": "^6.0.0",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
+    "embedded-postgres": "^18.1.0-beta.16",
     "express": "^4.18.2",
     "express-rate-limit": "^8.0.0",
     "express-validator": "^7.2.1",
@@ -43,10 +45,14 @@
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "nodemailer": "^7.0.5",
+    "pg": "^8.18.0",
     "socket.io": "^4.8.1",
     "speakeasy": "^2.0.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "uuid": "^11.1.0"
+  },
+  "optionalDependencies": {
+    "@embedded-postgres/darwin-arm64": "^18.1.0-beta.16"
   }
 }

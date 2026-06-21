@@ -109,7 +109,7 @@ const AdminNewsView: React.FC<AdminNewsViewProps> = ({ setActiveView }) => {
             const token = localStorage.getItem('token');
 
             // Utiliser la même URL que NewsSection
-            const response = await fetch('http://localhost:5001/api/v1/news?limit=100', {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}/api/v1/news?limit=100`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -174,8 +174,8 @@ const AdminNewsView: React.FC<AdminNewsViewProps> = ({ setActiveView }) => {
             console.log('🔑 Token:', token.substring(0, 20) + '...');
 
             const url = selectedNews
-                ? `http://localhost:5001/api/v1/news/${selectedNews.id}`
-                : 'http://localhost:5001/api/v1/news';
+                ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}/api/v1/news/${selectedNews.id}`
+                : `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}/api/v1/news`;
 
             const method = selectedNews ? 'PUT' : 'POST';
 

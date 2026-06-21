@@ -1,0 +1,64 @@
+# Git
+.git
+.gitignore
+
+# Dependencies (reinstalled in container)
+node_modules
+*/node_modules
+
+# Environment files (injected at runtime)
+.env
+.env.*
+!.env.example
+
+# IDE / Editor
+.vscode
+.idea
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+
+# Documentation
+README.md
+CHANGELOG.md
+LICENSE
+docs/
+
+# Test / Coverage
+coverage
+.nyc_output
+__tests__
+__mocks__
+*.test.*
+*.spec.*
+jest.config.*
+
+# Build artifacts
+dist
+build
+.next
+
+# Mobile (not needed in web containers)
+mobile/
+ios/
+android/
+
+# Kubernetes manifests
+k8s/
+K8s:/
+*.yaml
+!docker-compose.yaml
+
+# Scripts
+*.sh
+*.md
+
+# Misc
+*.tgz
+.cache
+.temp

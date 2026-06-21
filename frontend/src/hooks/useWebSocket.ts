@@ -7,60 +7,66 @@ interface UseWebSocketOptions {
 }
 
 export function useWebSocket(options: UseWebSocketOptions) {
-    const { url, reconnectInterval = 5000, maxReconnectAttempts = 5 } = options;
+    const { url, reconnectInterval = 10000, maxReconnectAttempts = 2 } = options;
     const [socket, setSocket] = useState<WebSocket | null>(null);
     const [connected, setConnected] = useState(false);
     const reconnectAttempts = useRef(0);
+    const wsRef = useRef<WebSocket | null>(null);
 
     const send = useCallback((data: any) => {
-        if (socket?.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify(data));
-        } else {
-            console.warn('WebSocket not connected');
+        if (wsRef.current?.readyState === WebSocket.OPEN) {
+            wsRef.current.send(JSON.stringify(data));
         }
-    }, [socket]);
+    }, []);
 
     useEffect(() => {
+        let cancelled = false;
+
         const connect = () => {
+            if (cancelled) return;
             try {
                 const ws = new WebSocket(url);
+                wsRef.current = ws;
 
                 ws.onopen = () => {
-                    console.log('WebSocket connected');
-                    setConnected(true);
-                    reconnectAttempts.current = 0;
-                };
-
-                ws.onclose = () => {
-                    console.log('WebSocket disconnected');
-                    setConnected(false);
-
-                    if (reconnectAttempts.current < maxReconnectAttempts) {
-                        setTimeout(() => {
-                            reconnectAttempts.current++;
-                            connect();
-                        }, reconnectInterval);
+                    if (!cancelled) {
+                        setConnected(true);
+                        setSocket(ws);
+                        reconnectAttempts.current = 0;
                     }
                 };
 
-                ws.onerror = (error) => {
-                    console.error('WebSocket error:', error);
+                ws.onclose = () => {
+                    if (!cancelled) {
+                        setConnected(false);
+                        // Reconnexion silencieuse avec peu de tentatives
+                        if (reconnectAttempts.current < maxReconnectAttempts) {
+                            setTimeout(() => {
+                                reconnectAttempts.current++;
+                                connect();
+                            }, reconnectInterval);
+                        }
+                    }
                 };
 
-                setSocket(ws);
+                // Silencieux : pas de console.error pour éviter le spam
+                ws.onerror = () => {};
 
-                return () => {
-                    ws.close();
-                };
-            } catch (error) {
-                console.error('Failed to create WebSocket:', error);
+            } catch {
+                // Connexion WebSocket optionnelle - pas critique
             }
         };
 
         connect();
 
         return () => {
-            socket?.close();
+            cancelled = true;
+            if (wsRef.current) {
+                wsRef.current.onclose = null;
+                wsRef.current.onerror = null;
+                wsRef.current.close();
+                wsRef.current = null;
+            }
         };
     }, [url, reconnectInterval, maxReconnectAttempts]);
 

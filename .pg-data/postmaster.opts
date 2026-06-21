@@ -1,0 +1,1 @@
+/Users/cyrilsohnde/afristocks/node_modules/@embedded-postgres/darwin-arm64/native/bin/postgres "-D" "/Users/cyrilsohnde/afristocks/.pg-data" "-p" "5433" "-c" "unix_socket_directories="

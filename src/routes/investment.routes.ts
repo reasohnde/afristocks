@@ -99,4 +99,41 @@ router.get('/my-investments', async (req, res) => {
   }
 });
 
+// Alias: GET /api/investments/my (utilisé par fundService.ts)
+router.get('/my', async (req, res) => {
+  try {
+    const investments = await InvestmentService.getUserInvestments(req.user!.userId);
+    res.json({
+      success: true,
+      data: investments
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
+// POST /api/investments (investir dans la première startup active)
+router.post('/',
+  body('amount').isFloat({ min: 1000 }).withMessage('Le montant minimum est de 1000 XOF'),
+  validateRequest,
+  async (req: Request, res: Response) => {
+    try {
+      const { amount } = req.body;
+      // Trouver la première startup active
+      const { prisma } = require('../config/database');
+      const startup = await prisma.startup.findFirst({ where: { isActive: true } });
+      if (!startup) {
+        return res.status(400).json({ success: false, message: 'Aucune startup active' });
+      }
+      const result = await InvestmentService.invest(req.user!.userId, startup.id, amount);
+      res.json({ success: true, data: result });
+    } catch (error: any) {
+      res.status(400).json({ success: false, message: error.message });
+    }
+  }
+);
+
 export { router as investmentRoutes };

@@ -1,0 +1,26 @@
+module.exports = {
+  API: {
+    createAnimatedNode: jest.fn(),
+    connectAnimatedNodes: jest.fn(),
+    disconnectAnimatedNodes: jest.fn(),
+    setAnimatedNodeValue: jest.fn(),
+    setAnimatedNodeOffset: jest.fn(),
+    flattenAnimatedNodeOffset: jest.fn(),
+    extractAnimatedNodeOffset: jest.fn(),
+    connectAnimatedNodeToView: jest.fn(),
+    disconnectAnimatedNodeFromView: jest.fn(),
+    restoreDefaultValues: jest.fn(),
+    dropAnimatedNode: jest.fn(),
+    addAnimatedEventToView: jest.fn(),
+    removeAnimatedEventFromView: jest.fn(),
+    startAnimatingNode: jest.fn(),
+    stopAnimation: jest.fn(),
+    setAnimatingValue: jest.fn(),
+    addListener: jest.fn(),
+    removeListeners: jest.fn(),
+  },
+  nativeEventEmitter: {
+    addListener: jest.fn(),
+    removeListeners: jest.fn(),
+  },
+};

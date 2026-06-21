@@ -24,7 +24,7 @@ import StartupDashboardView from '../app/views/StartupDashboardView';
 
 // Type definitions - using imported types from ../types
 
-const API_URL = 'http://localhost:8000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002';
 
 const AfriStocksApp = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

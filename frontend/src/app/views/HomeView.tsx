@@ -59,7 +59,7 @@ const HomeView: React.FC<HomeViewProps> = ({
     const fetchNews = async () => {
       try {
         setLoadingNews(true);
-        const response = await fetch('http://localhost:5001/api/v1/news?limit=3');
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5002'}/api/v1/news?limit=3`);
         const data = await response.json();
 
         if (data.data && Array.isArray(data.data)) {
