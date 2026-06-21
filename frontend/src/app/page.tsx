@@ -23,6 +23,8 @@ import InvestmentCheckoutView from './views/InvestmentCheckoutView';
 import HomeView from './views/HomeView';
 import StartupsView from './views/StartupsView';
 import PortfolioView from './views/PortfolioView';
+import DepositView from './views/DepositView';
+import WithdrawView from './views/WithdrawView';
 import TradingView from './views/TradingView';
 import StartupDetailView from './views/StartupDetailView';
 import StartupDashboardView from './views/StartupDashboardView';
@@ -1366,6 +1368,8 @@ const AfriStocksApp = () => {
           {activeView === 'home' && <HomeView isAuthenticated={isAuthenticated} user={user} mounted={mounted} setActiveView={setActiveView} setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} setShowAccountTypeSelection={setShowAccountTypeSelection} />}
           {activeView === 'startups' && <StartupsView setSelectedStartup={setSelectedStartup} setActiveView={setActiveView} />}
           {activeView === 'portfolio' && <PortfolioView isAuthenticated={isAuthenticated} user={user} setActiveView={setActiveView} setAuthMode={setAuthMode} setShowAuthModal={setShowAuthModal} />}
+          {activeView === 'deposit' && <DepositView setActiveView={setActiveView} />}
+          {activeView === 'withdraw' && <WithdrawView setActiveView={setActiveView} />}
           {activeView === 'trading' && <TradingView isAuthenticated={isAuthenticated} user={user} setActiveView={setActiveView} />}
           {activeView === 'actualites' && <NewsSection />}
 

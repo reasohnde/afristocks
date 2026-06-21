@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Briefcase, TrendingUp, TrendingDown, DollarSign, PieChart, BarChart3, ArrowUpRight, ArrowDownRight, Plus, Download, Filter, Calendar, Eye, EyeOff, Activity } from 'lucide-react';
+import { walletService } from '../../services/api';
 
 interface PortfolioViewProps {
   isAuthenticated: boolean;
@@ -19,7 +20,22 @@ const PortfolioView: React.FC<PortfolioViewProps> = ({
   const [timeRange, setTimeRange] = useState('1M');
   const [showBalances, setShowBalances] = useState(true);
 
-  const userBalance = user?.balance || 125000;
+  // Solde réel du portefeuille (GET /api/wallet/balance) — le token passe par le cookie auth_token
+  const [wallet, setWallet] = useState<any>(null);
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let active = true;
+    walletService
+      .getBalance()
+      .then((res) => { if (active) setWallet(res.data.data); })
+      .catch(() => { if (active) setWallet(null); });
+    return () => { active = false; };
+  }, [isAuthenticated]);
+
+  const currency = wallet?.currency || 'XOF';
+  const userBalance = wallet?.balance ?? 0;        // liquidités disponibles (réel)
+  const userLocked = wallet?.lockedBalance ?? 0;   // fonds bloqués (retraits en cours)
+  // Le portefeuille d'investissements réel sera branché en B5 (GET /investments/my-investments).
   const userPortfolio = user?.portfolio || 85000;
   const userReturns = user?.returns || 12.5;
 
@@ -116,7 +132,8 @@ const PortfolioView: React.FC<PortfolioViewProps> = ({
   // Calculs du portfolio
   const totalValue = portfolio.reduce((sum, item) => sum + item.value, 0);
   const totalChange = portfolio.reduce((sum, item) => sum + item.changeValue, 0);
-  const totalChangePercent = ((totalValue - (totalValue - totalChange)) / (totalValue - totalChange)) * 100;
+  const _denom = totalValue - totalChange;
+  const totalChangePercent = _denom === 0 ? 0 : ((totalValue - _denom) / _denom) * 100;
 
   // Répartition par secteur
   const sectorDistribution = portfolio.reduce((acc, item) => {
@@ -366,13 +383,20 @@ const PortfolioView: React.FC<PortfolioViewProps> = ({
       </GlassCard>
 
       {/* Actions rapides */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <button
           onClick={handleDeposit}
           className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-200 text-white flex items-center justify-center gap-2"
         >
           <Plus className="w-5 h-5" />
           Déposer des fonds
+        </button>
+        <button
+          onClick={() => setActiveView('withdraw')}
+          className="p-4 bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-200 text-white flex items-center justify-center gap-2"
+        >
+          <ArrowDownRight className="w-5 h-5" />
+          Retirer des fonds
         </button>
         <button
           onClick={handleReinvest}
