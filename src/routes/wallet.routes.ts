@@ -44,6 +44,29 @@ router.post('/deposit', async (req, res) => {
   }
 });
 
+// Retirer des fonds
+router.post('/withdraw', async (req, res) => {
+  try {
+    const { amount, bankDetails } = req.body;
+    if (typeof amount !== 'number' || !isFinite(amount) || amount <= 0) {
+      return res.status(400).json({ success: false, message: 'Montant invalide' });
+    }
+    if (!bankDetails || typeof bankDetails !== 'object' || !bankDetails.bankName) {
+      return res.status(400).json({ success: false, message: 'Coordonnées bancaires requises (bankName)' });
+    }
+    const result = await WalletService.withdraw(req.user!.userId, amount, bankDetails);
+    res.json({
+      success: true,
+      data: result
+    });
+  } catch (error: any) {
+    res.status(400).json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+
 // Historique des transactions
 router.get('/transactions', async (req, res) => {
   try {

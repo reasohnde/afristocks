@@ -21,7 +21,7 @@ export function generateTokens(user: User) {
   
   const refreshToken = jwt.sign(
     { ...payload, type: 'refresh' },
-    process.env.JWT_SECRET!,
+    process.env.JWT_REFRESH_SECRET!,
     { expiresIn: '7d' }
   );
   
@@ -42,7 +42,7 @@ export function verifyAccessToken(token: string): TokenPayload {
 
 export function verifyRefreshToken(token: string): TokenPayload {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as TokenPayload;
+    const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET!) as TokenPayload;
     if (decoded.type !== 'refresh') {
       throw new Error('Invalid token type');
     }
