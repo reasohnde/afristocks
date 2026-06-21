@@ -13,6 +13,8 @@ import { prisma, checkDatabaseConnection } from './config/database';
 import { redis } from './config/redis';
 import { apiLimiter } from './middleware/rateLimit.middleware';
 import { verifyAccessToken } from './utils/token.utils';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './config/swagger';
 
 // Charger les variables d'environnement
 dotenv.config();
@@ -70,6 +72,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Rate limiting global
 app.use('/api/', apiLimiter);
+
+// Documentation interactive de l'API (Swagger UI) — http://localhost:PORT/api/docs
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Monter les routes
 app.use('/api', routes);
