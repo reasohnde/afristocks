@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, TrendingUp, Users, Star, CheckCircle, FileText, Play, ChevronRight, Filter, MapPin, DollarSign, Award, Target } from 'lucide-react';
+import { startupService } from '../../services/api';
 
 interface StartupsViewProps {
   setSelectedStartup: (startup: any) => void;
@@ -12,8 +13,8 @@ const StartupsView: React.FC<StartupsViewProps> = ({ setSelectedStartup, setActi
   const [selectedCountry, setSelectedCountry] = useState('all');
   const [sortBy, setSortBy] = useState('rating');
 
-  // Données des startups
-  const startups = [
+  // Exemples de repli (affichés uniquement si le backend ne renvoie aucune startup)
+  const SEED_STARTUPS = [
     {
       id: 1,
       name: 'AgroTech Solutions',
@@ -153,6 +154,44 @@ const StartupsView: React.FC<StartupsViewProps> = ({ setSelectedStartup, setActi
       minInvestment: 8000
     }
   ];
+
+  // Startups réelles via GET /api/investments/startups ; repli sur les exemples ci-dessus.
+  const [startups, setStartups] = useState<any[]>(SEED_STARTUPS);
+  useEffect(() => {
+    let active = true;
+    startupService.getAll()
+      .then((res) => {
+        const list = res.data?.data?.startups ?? res.data?.data ?? [];
+        if (active && Array.isArray(list) && list.length) {
+          setStartups(list.map((s: any) => ({
+            id: s.id,
+            name: s.name,
+            sector: s.sector || 'Autre',
+            country: s.country || 'Afrique',
+            description: s.description || '',
+            valuation: s.valuationTarget ?? s.valuation ?? 0,
+            sharePrice: s.sharePrice ?? 0,
+            availableShares: s.availableShares ?? 0,
+            totalShares: s.totalShares ?? 0,
+            growth: s.growth ?? 0,
+            rating: s.rating ?? 0,
+            verified: true,
+            pitchDeck: !!s.pitchDeck,
+            video: !!s.video,
+            raised: s.raisedAmount ?? s.raised ?? 0,
+            investors: s.investors ?? 0,
+            founded: s.founded || '',
+            team: s.team ?? 0,
+            tags: s.tags || [],
+            impactScore: s.impactScore ?? 0,
+            minInvestment: s.minInvestment ?? 1000,
+            maxInvestment: s.maxInvestment,
+          })));
+        }
+      })
+      .catch(() => { /* repli silencieux sur SEED_STARTUPS */ });
+    return () => { active = false; };
+  }, []);
 
   // Filtrer et trier les startups
   const filteredStartups = startups.filter(startup => {

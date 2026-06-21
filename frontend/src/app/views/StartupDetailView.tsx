@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronLeft, Star, CheckCircle, MapPin, Calendar, Users, TrendingUp, FileText, Play, Download, Share2, Heart, Shield, Award, Target, BarChart3, DollarSign, Globe, Mail, Phone, Linkedin, Twitter } from 'lucide-react';
+import { investmentService } from '../../services/api';
 
 interface StartupDetailViewProps {
   startup: any;
@@ -67,11 +68,15 @@ const StartupDetailView: React.FC<StartupDetailViewProps> = ({ startup, setActiv
 
     const handleConfirmInvestment = async () => {
       setIsProcessing(true);
-      // Simulation d'investissement
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      alert(`Investissement de ${investmentAmount} XOF confirmé dans ${startup.name}`);
-      setIsProcessing(false);
-      onClose();
+      try {
+        await investmentService.invest(String(startup.id), { amount: Number(investmentAmount) });
+        alert(`Investissement de ${Number(investmentAmount).toLocaleString()} XOF confirmé dans ${startup.name}`);
+        onClose();
+      } catch (err: any) {
+        alert(err?.response?.data?.message || "Échec de l'investissement. Vérifiez votre solde et le montant (min/max de la campagne).");
+      } finally {
+        setIsProcessing(false);
+      }
     };
 
     return (
@@ -93,7 +98,7 @@ const StartupDetailView: React.FC<StartupDetailViewProps> = ({ startup, setActiv
             <div className="bg-white/5 rounded-xl p-4">
               <p className="text-sm text-white/60">Nombre d'actions</p>
               <p className="text-lg font-semibold text-white">
-                {Math.floor(Number(investmentAmount) / startup.sharePrice)} actions
+                {startup.sharePrice ? Math.floor(Number(investmentAmount) / startup.sharePrice) : 0} actions
               </p>
             </div>
           </div>
