@@ -20,8 +20,10 @@ export const registerValidator: ValidationChain[] = [
     .withMessage('Le nom doit contenir entre 2 et 100 caractères'),
   
   body('phoneNumber')
-    .optional()
-    .isMobilePhone('any')
+    .optional({ checkFalsy: true })
+    // isMobilePhone('any') rejette des numéros ouest-africains valides (ex. Côte d'Ivoire) ;
+    // on accepte un format international/local permissif (chiffres + séparateurs, 8-20 car.).
+    .matches(/^\+?[0-9\s().-]{8,20}$/)
     .withMessage('Numéro de téléphone invalide'),
   
   body('role')
