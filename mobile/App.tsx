@@ -23,6 +23,8 @@ import {
   Modal,
 } from 'react-native';
 
+import { login as apiLogin, register as apiRegister } from './src/services/api';
+
 // Types
 interface User {
   id: string;
@@ -147,18 +149,26 @@ const App = () => {
       }
 
       setLoading(true);
-      // Simulate API call
-      setTimeout(() => {
+      try {
+        const result = isLogin
+          ? await apiLogin(email, password)
+          : await apiRegister({ name, email, password });
         setUser({
-          id: '1',
-          email,
-          name: name || 'Investisseur Test',
-          role: 'INVESTOR',
-          walletBalance: 50000,
+          id: result.user.id,
+          email: result.user.email,
+          name: result.user.name,
+          role: result.user.role === 'STARTUP' ? 'STARTUP' : 'INVESTOR',
+          walletBalance: 0,
         });
         setIsAuthenticated(true);
+      } catch (e: any) {
+        Alert.alert(
+          'Échec de la connexion',
+          e?.message || 'Connexion impossible. Vérifiez vos identifiants et le réseau.',
+        );
+      } finally {
         setLoading(false);
-      }, 1500);
+      }
     };
 
     return (
