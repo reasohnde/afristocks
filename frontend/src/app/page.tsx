@@ -10,6 +10,7 @@ import {
   Edit3, Camera, FileCheck, Eye, Plus, Upload, Download, GlobeIcon,
   Cpu, Leaf, Truck, GraduationCap, ShoppingCart, Construction, ArrowLeft
 } from 'lucide-react';
+import Cookies from 'js-cookie';
 
 // Import du contexte Fund
 import { FundProvider } from '../contexts/FundContext';
@@ -217,50 +218,36 @@ const AfriStocksApp = () => {
       });
 
       const data = await response.json();
-      console.log('📥 Réponse login:', data);
+      const payload = data?.data; // enveloppe backend: { success, data: { user, accessToken, refreshToken } }
 
-      if (response.ok && data.token) {
-        const userData = {
-          ...data.user,
-          balance: data.user.balance || 125000,
-          portfolio: data.user.portfolio || 85000,
-          returns: data.user.returns || 12.5,
-          verified: data.user.verified || false
-        };
+      if (response.ok && payload?.accessToken) {
+        const userData = { ...payload.user };
 
-        // Stocker toutes les informations nécessaires
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('userRole', data.user.role);
-        localStorage.setItem('userInfo', JSON.stringify({
-          id: data.user.id,
-          email: data.user.email,
-          name: data.user.name,
-          role: data.user.role
-        }));
+        // Token dans le COOKIE -> l'intercepteur axios (services/api.ts) authentifie
+        // automatiquement tous les appels suivants (/wallet, /investments).
+        Cookies.set('auth_token', payload.accessToken, { expires: 1, sameSite: 'lax' });
+        if (payload.refreshToken) {
+          Cookies.set('refresh_token', payload.refreshToken, { expires: 7, sameSite: 'lax' });
+        }
+        localStorage.setItem('userRole', payload.user.role);
         localStorage.setItem('user', JSON.stringify(userData));
 
         setUser(userData);
         setIsAuthenticated(true);
         setShowAuthModal(false);
 
-        console.log('✅ Login réussi:', {
-          email: data.user.email,
-          role: data.user.role
-        });
-
-        // Toast de succès
         showToast('Connexion réussie ! Bienvenue sur AfriStocks', 'success');
 
         // Redirection selon le rôle
-        if (data.user.role === 'ADMIN') {
+        if (payload.user.role === 'ADMIN') {
           setActiveView('admin-dashboard');
-        } else if (data.user.role === 'STARTUP') {
+        } else if (payload.user.role === 'STARTUP') {
           setActiveView('startup-dashboard');
         } else {
-          setActiveView('dashboard');
+          setActiveView('portfolio');
         }
       } else {
-        showToast(data.error || data.message || 'Erreur de connexion', 'error');
+        showToast(data.message || data.error || 'Erreur de connexion', 'error');
       }
     } catch (error) {
       console.error('❌ Erreur login:', error);
@@ -310,39 +297,31 @@ const AfriStocksApp = () => {
       const data = await response.json();
       console.log('Données reçues:', data);
 
-      if (response.ok) {
-        console.log('Inscription réussie !');
+      if (response.ok && data?.data?.accessToken) {
+        const payload = data.data;
+        const userInfo = { ...payload.user };
 
-        const token = data.token;
-        const userData = data.user;
-
-        const userInfo = {
-          ...userData,
-          balance: userData.balance || 125000,
-          portfolio: userData.portfolio || 85000,
-          returns: userData.returns || 12.5,
-          verified: userData.verified || false
-        };
-
-        if (token) {
-          localStorage.setItem('token', token);
+        Cookies.set('auth_token', payload.accessToken, { expires: 1, sameSite: 'lax' });
+        if (payload.refreshToken) {
+          Cookies.set('refresh_token', payload.refreshToken, { expires: 7, sameSite: 'lax' });
         }
+        localStorage.setItem('userRole', payload.user.role);
         localStorage.setItem('user', JSON.stringify(userInfo));
 
         setUser(userInfo);
         setIsAuthenticated(true);
         setShowAuthModal(false);
 
-        // Toast de succès
         showToast('Inscription réussie ! Bienvenue sur AfriStocks', 'success');
 
-        // Redirection startup après inscription
-        if (userInfo.role === 'STARTUP') {
+        if (payload.user.role === 'STARTUP') {
           setActiveView('startup-dashboard');
+        } else {
+          setActiveView('portfolio');
         }
       } else {
         console.error('Erreur inscription:', data);
-        showToast(data.error || data.message || 'Erreur d\'inscription', 'error');
+        showToast(data.message || data.error || 'Erreur d\'inscription', 'error');
       }
     } catch (error: any) {
       console.error('=== ERREUR INSCRIPTION ===');
@@ -355,7 +334,10 @@ const AfriStocksApp = () => {
 
   // Fonction de déconnexion
   const handleLogout = () => {
+    Cookies.remove('auth_token');
+    Cookies.remove('refresh_token');
     localStorage.removeItem('token');
+    localStorage.removeItem('userRole');
     localStorage.removeItem('user');
     setUser(null);
     setIsAuthenticated(false);

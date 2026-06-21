@@ -62,3 +62,22 @@ export const startupService = {
     api.get(`/investments/startups/${id}`),
 };
 
+// Wallet services (authentification requise — token via le cookie auth_token)
+export const walletService = {
+  getBalance: () => api.get('/wallet/balance'),
+  getTransactions: () => api.get('/wallet/transactions'),
+  deposit: (data: { amount: number; paymentMethod: string }) =>
+    api.post('/wallet/deposit', data),
+  withdraw: (data: {
+    amount: number;
+    bankDetails: { accountNumber: string; bankName: string; accountName: string };
+  }) => api.post('/wallet/withdraw', data),
+};
+
+// Investment services
+export const investmentService = {
+  invest: (startupId: string, data: { amount: number }) =>
+    api.post(`/investments/invest/${startupId}`, data),
+  getMyInvestments: () => api.get('/investments/my-investments'),
+};
+
