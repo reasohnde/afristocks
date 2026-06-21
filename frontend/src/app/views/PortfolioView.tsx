@@ -32,12 +32,12 @@ const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
   const s = (status || '').toUpperCase();
   const tone =
     s === 'COMPLETED' || s === 'ACTIVE'
-      ? 'text-emerald-400 bg-emerald-400/10'
+      ? 'text-emerald-700 bg-emerald-50 border border-emerald-200'
       : s === 'PENDING'
-      ? 'text-amber-400 bg-amber-400/10'
+      ? 'text-amber-700 bg-amber-50 border border-amber-200'
       : s === 'FAILED' || s === 'CANCELLED' || s === 'REJECTED'
-      ? 'text-red-400 bg-red-400/10'
-      : 'text-slate-400 bg-slate-400/10';
+      ? 'text-red-700 bg-red-50 border border-red-200'
+      : 'text-slate-600 bg-slate-100 border border-slate-200';
   return <span className={`inline-block px-2 py-0.5 rounded text-xs font-medium ${tone}`}>{s || '—'}</span>;
 };
 
@@ -78,11 +78,11 @@ const PortfolioView: React.FC<PortfolioViewProps> = ({
   if (!isAuthenticated) {
     return (
       <div className="max-w-md mx-auto py-24 text-center">
-        <h1 className="text-2xl font-semibold text-slate-100 mb-2">Portefeuille</h1>
-        <p className="text-slate-400 mb-6">Connectez-vous pour accéder à votre portefeuille.</p>
+        <h1 className="text-2xl font-semibold text-slate-900 mb-2">Portefeuille</h1>
+        <p className="text-slate-500 mb-6">Connectez-vous pour accéder à votre portefeuille.</p>
         <button
           onClick={() => { setAuthMode('login'); setShowAuthModal(true); }}
-          className="px-5 py-2.5 rounded-md bg-sky-600 hover:bg-sky-500 text-white font-medium transition-colors"
+          className="px-5 py-2.5 rounded-md bg-blue-700 hover:bg-blue-800 text-white font-medium transition-colors"
         >
           Se connecter
         </button>
@@ -97,7 +97,7 @@ const PortfolioView: React.FC<PortfolioViewProps> = ({
   const accountValue = availableCash + lockedCash + totalInvested;
 
   const kpis = [
-    { label: 'Valeur du compte', value: fmtXOF(accountValue) },
+    { label: 'Valeur du compte', value: fmtXOF(accountValue), strong: true },
     { label: 'Liquidités disponibles', value: fmtXOF(availableCash) },
     { label: 'Total investi', value: fmtXOF(totalInvested) },
     { label: 'Positions', value: String(investments.length) },
@@ -105,32 +105,36 @@ const PortfolioView: React.FC<PortfolioViewProps> = ({
 
   const thBase = 'px-5 py-2.5 font-medium text-xs uppercase tracking-wide text-slate-500';
   const td = 'px-5 py-3';
+  const card = 'bg-white border border-slate-200 rounded-lg shadow-sm';
 
   return (
-    <div className="space-y-6">
-      {/* En-tête */}
+    <div className="space-y-6 text-slate-900">
+      {/* En-tête compte */}
       <div className="flex items-end justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-slate-100">Portefeuille</h1>
-          <p className="text-sm text-slate-500">
-            {user?.name ? `${user.name} · ` : ''}Compte en {currency}
-          </p>
+          <div className="text-xs uppercase tracking-wide text-slate-500">Compte · {currency}</div>
+          <h1 className="text-2xl font-semibold text-slate-900 tabular-nums mt-0.5">
+            {loading ? '…' : fmtXOF(accountValue)}
+          </h1>
+          <p className="text-sm text-slate-500">{user?.name || ''}</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => setActiveView('deposit')} className="px-4 py-2 text-sm rounded-md bg-sky-600 hover:bg-sky-500 text-white font-medium transition-colors">Déposer</button>
-          <button onClick={() => setActiveView('withdraw')} className="px-4 py-2 text-sm rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors">Retirer</button>
-          <button onClick={() => setActiveView('startups')} className="px-4 py-2 text-sm rounded-md bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors">Investir</button>
+          <button onClick={() => setActiveView('deposit')} className="px-4 py-2 text-sm rounded-md bg-blue-700 hover:bg-blue-800 text-white font-medium transition-colors">Déposer</button>
+          <button onClick={() => setActiveView('withdraw')} className="px-4 py-2 text-sm rounded-md bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 transition-colors">Retirer</button>
+          <button onClick={() => setActiveView('startups')} className="px-4 py-2 text-sm rounded-md bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 transition-colors">Investir</button>
         </div>
       </div>
 
-      {error && <div className="px-4 py-3 rounded-md bg-red-500/10 border border-red-500/20 text-red-300 text-sm">{error}</div>}
+      {error && <div className="px-4 py-3 rounded-md bg-red-50 border border-red-200 text-red-700 text-sm">{error}</div>}
 
       {/* Indicateurs (données réelles uniquement) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-slate-800 border border-slate-800 rounded-lg overflow-hidden">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {kpis.map((k) => (
-          <div key={k.label} className="bg-[#0f141c] px-5 py-4">
+          <div key={k.label} className={`${card} px-5 py-4`}>
             <div className="text-xs uppercase tracking-wide text-slate-500">{k.label}</div>
-            <div className="mt-1 text-lg font-semibold text-slate-100 tabular-nums">{loading ? '…' : k.value}</div>
+            <div className={`mt-1 font-semibold tabular-nums ${k.strong ? 'text-xl' : 'text-lg'} text-slate-900`}>
+              {loading ? '…' : k.value}
+            </div>
           </div>
         ))}
       </div>
@@ -139,22 +143,22 @@ const PortfolioView: React.FC<PortfolioViewProps> = ({
       )}
 
       {/* Mes investissements */}
-      <section className="border border-slate-800 rounded-lg overflow-hidden bg-[#0f141c]">
-        <div className="px-5 py-3 border-b border-slate-800 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-200">Mes investissements</h2>
+      <section className={`${card} overflow-hidden`}>
+        <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-slate-900">Mes investissements</h2>
           <span className="text-xs text-slate-500">{investments.length} position(s)</span>
         </div>
         {loading ? (
-          <div className="px-5 py-10 text-center text-slate-500 text-sm">Chargement…</div>
+          <div className="px-5 py-10 text-center text-slate-400 text-sm">Chargement…</div>
         ) : investments.length === 0 ? (
           <div className="px-5 py-12 text-center">
-            <p className="text-slate-400 text-sm mb-3">Aucun investissement pour l'instant.</p>
-            <button onClick={() => setActiveView('startups')} className="text-sky-400 hover:text-sky-300 text-sm font-medium">Explorer les startups →</button>
+            <p className="text-slate-500 text-sm mb-3">Aucun investissement pour l'instant.</p>
+            <button onClick={() => setActiveView('startups')} className="text-blue-700 hover:text-blue-800 text-sm font-medium">Explorer les startups →</button>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead>
+              <thead className="bg-slate-50">
                 <tr className="text-left">
                   <th className={thBase}>Startup</th>
                   <th className={`${thBase} text-right`}>Montant investi</th>
@@ -164,11 +168,11 @@ const PortfolioView: React.FC<PortfolioViewProps> = ({
               </thead>
               <tbody>
                 {investments.map((inv) => (
-                  <tr key={inv.id} className="border-t border-slate-800 hover:bg-white/[0.02]">
-                    <td className={`${td} text-slate-200`}>{inv.startup?.name || '—'}</td>
-                    <td className={`${td} text-right text-slate-100 tabular-nums`}>{fmtXOF(Number(inv.amount))}</td>
+                  <tr key={inv.id} className="border-t border-slate-100 hover:bg-slate-50">
+                    <td className={`${td} text-slate-900 font-medium`}>{inv.startup?.name || '—'}</td>
+                    <td className={`${td} text-right text-slate-900 tabular-nums`}>{fmtXOF(Number(inv.amount))}</td>
                     <td className={td}><StatusBadge status={inv.status} /></td>
-                    <td className={`${td} text-right text-slate-400 tabular-nums`}>{fmtDate(inv.investedAt)}</td>
+                    <td className={`${td} text-right text-slate-500 tabular-nums`}>{fmtDate(inv.investedAt)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -178,18 +182,18 @@ const PortfolioView: React.FC<PortfolioViewProps> = ({
       </section>
 
       {/* Transactions récentes */}
-      <section className="border border-slate-800 rounded-lg overflow-hidden bg-[#0f141c]">
-        <div className="px-5 py-3 border-b border-slate-800">
-          <h2 className="text-sm font-semibold text-slate-200">Transactions récentes</h2>
+      <section className={`${card} overflow-hidden`}>
+        <div className="px-5 py-3 border-b border-slate-200">
+          <h2 className="text-sm font-semibold text-slate-900">Transactions récentes</h2>
         </div>
         {loading ? (
-          <div className="px-5 py-10 text-center text-slate-500 text-sm">Chargement…</div>
+          <div className="px-5 py-10 text-center text-slate-400 text-sm">Chargement…</div>
         ) : transactions.length === 0 ? (
-          <div className="px-5 py-10 text-center text-slate-500 text-sm">Aucune transaction.</div>
+          <div className="px-5 py-10 text-center text-slate-400 text-sm">Aucune transaction.</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead>
+              <thead className="bg-slate-50">
                 <tr className="text-left">
                   <th className={thBase}>Type</th>
                   <th className={`${thBase} text-right`}>Montant</th>
@@ -198,16 +202,19 @@ const PortfolioView: React.FC<PortfolioViewProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {transactions.map((t) => (
-                  <tr key={t.id} className="border-t border-slate-800 hover:bg-white/[0.02]">
-                    <td className={`${td} text-slate-300`}>{TX_LABELS[t.type] || t.type}</td>
-                    <td className={`${td} text-right tabular-nums ${t.type === 'WITHDRAWAL' || t.type === 'INVESTMENT' || t.type === 'FEE' ? 'text-red-400' : 'text-emerald-400'}`}>
-                      {(t.type === 'WITHDRAWAL' || t.type === 'INVESTMENT' || t.type === 'FEE' ? '− ' : '+ ') + fmtXOF(Number(t.amount))}
-                    </td>
-                    <td className={td}><StatusBadge status={t.status} /></td>
-                    <td className={`${td} text-right text-slate-400 tabular-nums`}>{fmtDate(t.createdAt)}</td>
-                  </tr>
-                ))}
+                {transactions.map((t) => {
+                  const negative = t.type === 'WITHDRAWAL' || t.type === 'INVESTMENT' || t.type === 'FEE';
+                  return (
+                    <tr key={t.id} className="border-t border-slate-100 hover:bg-slate-50">
+                      <td className={`${td} text-slate-700`}>{TX_LABELS[t.type] || t.type}</td>
+                      <td className={`${td} text-right tabular-nums font-medium ${negative ? 'text-red-600' : 'text-emerald-600'}`}>
+                        {(negative ? '− ' : '+ ') + fmtXOF(Number(t.amount))}
+                      </td>
+                      <td className={td}><StatusBadge status={t.status} /></td>
+                      <td className={`${td} text-right text-slate-500 tabular-nums`}>{fmtDate(t.createdAt)}</td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

@@ -704,6 +704,56 @@ const AfriStocksApp = () => {
     );
   };
 
+  // En-tête clair (style IBKR) affiché une fois connecté
+  const AppHeaderLight = () => {
+    const navItems: [string, string][] = [
+      ['home', 'Accueil'], ['startups', 'Startups'], ['portfolio', 'Portfolio'],
+      ['trading', 'Trading'], ['actualites', 'Actualités'], ['formations', 'Formations'], ['faq', 'FAQ'],
+    ];
+    return (
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center gap-8">
+              <div className="flex items-center cursor-pointer" onClick={() => setActiveView('home')}>
+                <TrendingUp className="w-7 h-7 text-blue-700" />
+                <span className="ml-2 text-lg font-bold text-slate-900">AfriStocks</span>
+              </div>
+              <nav className="hidden lg:flex items-center gap-1">
+                {navItems.map(([view, label]) => (
+                  <button key={view} onClick={() => setActiveView(view)}
+                    className={`relative px-3 py-2 text-sm font-medium transition-colors ${activeView === view ? 'text-blue-700' : 'text-slate-600 hover:text-slate-900'}`}>
+                    {label}
+                    {activeView === view && <span className="absolute -bottom-px left-2 right-2 h-0.5 bg-blue-700 rounded-full" />}
+                  </button>
+                ))}
+                {user?.role === 'ADMIN' && (
+                  <button onClick={() => setActiveView('admin-dashboard')}
+                    className={`px-3 py-2 text-sm font-medium transition-colors ${activeView.startsWith('admin') ? 'text-blue-700' : 'text-slate-600 hover:text-slate-900'}`}>
+                    Administration
+                  </button>
+                )}
+              </nav>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:block text-right leading-tight">
+                <div className="text-sm font-semibold text-slate-900">{user?.name || 'Compte'}</div>
+                <div className="text-xs text-slate-500">{user?.verified ? 'Vérifié' : 'Non vérifié'}</div>
+              </div>
+              <button onClick={handleLogout}
+                className="px-3 py-1.5 text-sm rounded-md border border-slate-300 text-slate-700 hover:bg-slate-100 transition-colors">
+                Déconnexion
+              </button>
+              <div className="w-9 h-9 rounded-full bg-blue-700 text-white flex items-center justify-center text-sm font-semibold">
+                {(user?.name || 'U').slice(0, 2).toUpperCase()}
+              </div>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  };
+
   // Header Component
   const Header = () => (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrollY > 50 ? 'bg-slate-950/95 backdrop-blur-2xl shadow-lg' : 'bg-gradient-to-b from-slate-950/95 to-slate-950/80 backdrop-blur-xl'
@@ -1344,13 +1394,15 @@ const AfriStocksApp = () => {
 
   return (
     <FundProvider>
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950 relative overflow-hidden">
-        {/* Background simple sans particules distrayantes */}
-        <div className="fixed inset-0 pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-emerald-500/5" />
-        </div>
+      <div className={`min-h-screen relative overflow-hidden ${isAuthenticated ? 'bg-[#f4f5f7]' : 'bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950'}`}>
+        {/* Fond décoratif uniquement sur les pages publiques (avant connexion) */}
+        {!isAuthenticated && (
+          <div className="fixed inset-0 pointer-events-none">
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-emerald-500/5" />
+          </div>
+        )}
 
-        <Header />
+        {isAuthenticated ? <AppHeaderLight /> : <Header />}
         <AuthModal />
 
         {showAccountTypeSelection && (
