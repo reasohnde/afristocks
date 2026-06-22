@@ -705,6 +705,35 @@ const AfriStocksApp = () => {
     );
   };
 
+  // En-tête public (clair/sombre) — avant connexion
+  const PublicHeaderLight = () => {
+    const { theme, toggle } = useTheme();
+    return (
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/90 dark:bg-[#0b0f17]/90 backdrop-blur border-b border-slate-200 dark:border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center cursor-pointer" onClick={() => setActiveView('home')}>
+              <TrendingUp className="w-7 h-7 text-blue-600" />
+              <span className="ml-2 text-lg font-bold text-slate-900 dark:text-white">AfriStocks</span>
+            </div>
+            <nav className="hidden md:flex items-center gap-6">
+              <button onClick={() => setActiveView('startups')} className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">Startups</button>
+              <button onClick={() => setActiveView('actualites')} className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">Actualités</button>
+              <button onClick={() => setActiveView('faq')} className="text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors">FAQ</button>
+            </nav>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <button onClick={toggle} aria-label="Basculer le thème clair/sombre" className="p-2 rounded-md text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
+              <button onClick={() => { setAuthMode('login'); setShowAuthModal(true); }} className="hidden sm:inline text-sm font-medium text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white px-3 py-1.5 transition-colors">Se connecter</button>
+              <button onClick={() => setShowAccountTypeSelection(true)} className="px-4 py-2 text-sm rounded-md bg-blue-700 hover:bg-blue-800 text-white font-semibold transition-colors">S'inscrire</button>
+            </div>
+          </div>
+        </div>
+      </header>
+    );
+  };
+
   // En-tête clair (style IBKR) affiché une fois connecté
   const AppHeaderLight = () => {
     const { theme, toggle } = useTheme();
@@ -1417,15 +1446,8 @@ const AfriStocksApp = () => {
 
   return (
     <FundProvider>
-      <div className={`min-h-screen relative overflow-hidden ${isAuthenticated ? 'bg-[#f4f5f7] dark:bg-[#0b0f17]' : 'bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950'}`}>
-        {/* Fond décoratif uniquement sur les pages publiques (avant connexion) */}
-        {!isAuthenticated && (
-          <div className="fixed inset-0 pointer-events-none">
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-emerald-500/5" />
-          </div>
-        )}
-
-        {isAuthenticated ? <AppHeaderLight /> : <Header />}
+      <div className={`min-h-screen relative overflow-hidden ${isAuthenticated ? 'bg-[#f4f5f7] dark:bg-[#0b0f17]' : 'bg-white dark:bg-[#0b0f17]'}`}>
+        {isAuthenticated ? <AppHeaderLight /> : <PublicHeaderLight />}
         <AuthModal />
 
         {showAccountTypeSelection && (
@@ -1556,7 +1578,7 @@ const AfriStocksApp = () => {
           )}
         </main>
 
-        {isAuthenticated ? <AppFooterLight /> : <Footer />}
+        <AppFooterLight />
 
         {/* Toast notifications */}
         {toast?.show && (
